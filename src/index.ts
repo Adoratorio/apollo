@@ -5,7 +5,7 @@ import {
   Vec2,
   ApolloOptions,
   FOLLOW,
-  Ease,
+  Easing,
   Magnetism,
   MODE,
   Timeline,
@@ -53,12 +53,11 @@ class Apollo {
 
   constructor(options : Partial<ApolloOptions>) {
     const defaults : ApolloOptions = {
-      follow: FOLLOW.CURSOR,
-      container: document.body as HTMLElement,
+      mode: FOLLOW.CURSOR,
       cursor: document.querySelector('.apollo__cursor') as HTMLElement,
       type: Apollo.TYPE.HTML,
-      ease: {
-        easing: Apollo.EASING.LINEAR,
+      easing: {
+        mode: Apollo.EASING.LINEAR,
         duration: 1000,
       },
       targets: [],
@@ -75,9 +74,9 @@ class Apollo {
       current: { x: 0, y: 0 },
       final: { x: 0, y: 0 },
     };
-    
+
     this.frameHandler = (delta: number) => this.frame(delta);
-    
+
     this.bindMouse();
     this.initTargets();
     this.setBoundingCursor();
@@ -128,8 +127,8 @@ class Apollo {
       y: this._mousePosition.y,
     };
 
-    const deltaT : number = Math.min(Math.max(delta, 0), this.options.ease.duration);
-    const t : number = this.options.ease.easing(deltaT / this.options.ease.duration);
+    const deltaT : number = Math.min(Math.max(delta, 0), this.options.easing.duration);
+    const t : number = this.options.easing.mode(deltaT / this.options.easing.duration);
 
     this.timelineCursor.current.x = this.timelineCursor.initial.x + (t * (this.timelineCursor.final.x - this.timelineCursor.initial.x));
     this.timelineCursor.current.y = this.timelineCursor.initial.y + (t * (this.timelineCursor.final.y - this.timelineCursor.initial.y));
@@ -139,9 +138,9 @@ class Apollo {
       y: Math.round(this.timelineCursor.current.y - this.boundingCursor.y),
     }
 
-    if (this.options.follow === 'mouse') {
+    if (this.options.mode === 'mouse') {
       this._coords = this._mousePosition;
-    } else if (this.options.follow === 'cursor') {
+    } else if (this.options.mode === 'cursor') {
       this._coords = this._cursorPosition;
     }
 
@@ -296,8 +295,8 @@ class Apollo {
       y: tempCoords.y,
     };
 
-    const deltaT : number = Math.min(Math.max(delta, 0), (<Magnetism>element.target.magnetism).ease.duration);
-    const t : number = (<Magnetism>element.target.magnetism).ease.easing(deltaT / (<Magnetism>element.target.magnetism).ease.duration);
+    const deltaT : number = Math.min(Math.max(delta, 0), (<Magnetism>element.target.magnetism).easing.duration);
+    const t : number = (<Magnetism>element.target.magnetism).easing.mode(deltaT / (<Magnetism>element.target.magnetism).easing.duration);
 
     element.timeline.current.x = element.timeline.initial.x + (t * (element.timeline.final.x - element.timeline.initial.x));
     element.timeline.current.y = element.timeline.initial.y + (t * (element.timeline.final.y - element.timeline.initial.y));
@@ -383,6 +382,14 @@ class Apollo {
       domElements: this.domElements,
       elements: this.elements,
     };
+  }
+
+  public get mouse() : Vec2 {
+    return this._mousePosition;
+  }
+
+  public get cursor() : Vec2 {
+    return this._cursorPosition;
   }
 
   public get coords() : Vec2 {

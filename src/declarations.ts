@@ -28,14 +28,14 @@ export enum FOLLOW {
   CURSOR = 'cursor',
 }
 
-export interface Ease {
-  easing : Function,
+export interface Easing {
+  mode : Function,
   duration : number,
 }
 
 export interface Magnetism {
   mode : MODE,
-  ease : Ease,
+  easing : Easing,
   options? : PUSH,
 }
 
@@ -60,11 +60,10 @@ export interface Element {
 }
 
 export interface ApolloOptions {
-  follow: FOLLOW,
-  container : HTMLElement,
+  mode: FOLLOW,
   cursor : HTMLElement,
   type : TYPE,
-  ease: Ease,
+  easing: Easing,
   targets: Array<Target>
   emitGlobal : boolean,
   onEnter : Function,
