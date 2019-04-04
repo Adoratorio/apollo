@@ -28,6 +28,7 @@ class Apollo {
 
   private options : ApolloOptions;
   private frameHandler : Function;
+  private cursorCheckHandler : Function;
 
   private elements : Array<Element> = [];
   private domElements : Array<HTMLElement> = [];
@@ -62,6 +63,7 @@ class Apollo {
       },
       targets: [],
       emitGlobal: false,
+      onUpdate: () => {},
       onEnter: () => {},
       onMove: () => {},
       onLeave: () => {},
@@ -76,6 +78,7 @@ class Apollo {
     };
 
     this.frameHandler = (delta: number) => this.frame(delta);
+    this.cursorCheckHandler = (delta: number) => this.cursorCheck(delta);
 
     this.bindMouse();
     this.initTargets();
@@ -89,7 +92,7 @@ class Apollo {
     }
     this.engine.start();
     this.engine.add(this.frameHandler, 'cursorMove');
-    this.engine.add(this.cursorCheck, 'cursorCheck', true);
+    this.engine.add(this.cursorCheckHandler, 'cursorCheck', true);
   }
 
   private bindMouse = () : void => {
@@ -151,6 +154,15 @@ class Apollo {
 
     this.timelineCursor.initial.x = this.timelineCursor.current.x;
     this.timelineCursor.initial.y = this.timelineCursor.current.y;
+
+    this.options.onUpdate(this._coords);
+
+    if (this.options.emitGlobal) {
+      const eventInit : CustomEventInit = {};
+      eventInit.detail = this._coords;
+      const customEvent : CustomEvent = new CustomEvent('apollo-update', eventInit);
+      window.dispatchEvent(customEvent);
+    }
   }
 
   private cursorCheck = (delta : number) : void => {
@@ -222,8 +234,9 @@ class Apollo {
               element.domElement.style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
               element.domElement.style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
             } else {
-              element.domElement.style.removeProperty('webkitTransform');
+              element.domElement.style.removeProperty('webkit-transform');
               element.domElement.style.removeProperty('transform');
+              element.domElement.style.removeProperty('z-index');
 
               this._pulling = false;
             }
@@ -269,6 +282,7 @@ class Apollo {
 
     element.domElement.style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
     element.domElement.style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+    element.domElement.style.zIndex = '10';
   }
 
   private push = (element : Element, delta : number) : void => {

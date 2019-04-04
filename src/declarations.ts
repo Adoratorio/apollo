@@ -66,6 +66,7 @@ export interface ApolloOptions {
   easing: Easing,
   targets: Array<Target>
   emitGlobal : boolean,
+  onUpdate : Function,
   onEnter : Function,
   onMove : Function,
   onLeave : Function,
