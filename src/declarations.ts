@@ -2,7 +2,6 @@ import Aion from '@adoratorio/aion';
 
 export enum TYPE {
   HTML = 'html',
-  SVG = 'svg',
   CANVAS = 'canvas',
 }
 
@@ -61,16 +60,18 @@ export interface Element {
 
 export interface ApolloOptions {
   mode: FOLLOW,
-  cursor : HTMLElement,
-  type : TYPE,
+  cursor: HTMLElement | null,
+  type: TYPE,
   easing: Easing,
-  targets: Array<Target>
-  emitGlobal : boolean,
-  onUpdate : Function,
-  onEnter : Function,
-  onMove : Function,
-  onLeave : Function,
-  aion : Aion | null,
+  targets: Array<Target>,
+  hiddenUntilFirstInteraction : boolean,
+  detectTouch: boolean,
+  emitGlobal: boolean,
+  onUpdate: Function,
+  onEnter: Function,
+  onMove: Function,
+  onLeave: Function,
+  aion: Aion | null,
 }
 
 export interface Timeline {

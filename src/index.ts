@@ -34,12 +34,14 @@ class Apollo {
   private domElements : Array<HTMLElement> = [];
 
   private timelineCursor : Timeline;
-  private boundingCursor : Vec2 = { x: 0, y: 0 };
+  private _boundingCursor : Vec2 = { x: 0, y: 0 };
 
   private _coords : Vec2 = { x: 0, y: 0 };
   private _mousePosition : Vec2 = { x: 0, y: 0 };
   private _cursorPosition : Vec2 = { x: 0, y: 0 };
   private _velocity : Vec2 = { x: 0, y: 0 };
+
+  private customCursor = { x: 0, y: 0 };
 
   private _distanceFromCenter : number = 0;
   private _distanceFromBorder : number = 0;
@@ -49,6 +51,7 @@ class Apollo {
 
   private status : boolean = false;
   private leave : boolean = false;
+  private first : boolean = true;
 
   private engine : Aion;
 
@@ -62,6 +65,8 @@ class Apollo {
         duration: 1000,
       },
       targets: [],
+      hiddenUntilFirstInteraction: false,
+      detectTouch: false,
       emitGlobal: false,
       onUpdate: () => {},
       onEnter: () => {},
@@ -82,7 +87,20 @@ class Apollo {
 
     this.bindMouse();
     this.initTargets();
-    this.setBoundingCursor();
+
+    if (this.options.type === Apollo.TYPE.HTML) {
+      this.setBoundingCursor();
+    }
+
+    this._coords = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
+    this._mousePosition = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
+    this._cursorPosition = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
+
+    if (this.options.hiddenUntilFirstInteraction && this.options.type === Apollo.TYPE.HTML) {
+      (<HTMLElement>this.options.cursor).style.display = 'none';
+    } else {
+      this.first = false;
+    }
 
     this.options.aion = new Aion();
     if (this.options.aion === null || typeof this.options.aion === 'undefined') {
@@ -90,6 +108,7 @@ class Apollo {
     } else {
       this.engine = this.options.aion;
     }
+
     this.engine.start();
     this.engine.add(this.frameHandler, 'cursorMove');
     this.engine.add(this.cursorCheckHandler, 'cursorCheck', true);
@@ -97,10 +116,20 @@ class Apollo {
 
   private bindMouse = () : void => {
     document.body.addEventListener('mousemove', this.mouseMove);
+    
+    if (this.options.detectTouch) {
+      document.body.addEventListener('touchstart', this.touchMove);
+      document.body.addEventListener('touchmove', this.touchMove);
+    }
   }
 
   private unbindMouse = () : void => {
     document.body.removeEventListener('mousemove', this.mouseMove);
+
+    if (this.options.detectTouch) {
+      document.body.removeEventListener('touchstart', this.touchMove);
+      document.body.removeEventListener('touchmove', this.touchMove);
+    }
   }
 
   private mouseMove = (event : MouseEvent) : void => {
@@ -115,10 +144,26 @@ class Apollo {
     }
   }
 
-  private setBoundingCursor = () : Vec2 => {
-    const { width, height } : ClientRect = this.options.cursor.getBoundingClientRect();
+  private touchMove = (event : TouchEvent) : void => {
+    this._mousePosition = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY,
+    };
+  }
 
-    return this.boundingCursor = {
+  public setBoundingCursor = (customCursor ?: Vec2) : Vec2 => {
+    let width = 0;
+    let height = 0;
+
+    if (this.options.cursor === null && customCursor !== undefined) {
+      width = customCursor.x;
+      height = customCursor.y;
+    } else {
+      const width : Number = (<HTMLElement>this.options.cursor).getBoundingClientRect().width;
+      const height : Number = (<HTMLElement>this.options.cursor).getBoundingClientRect().height;
+    }
+
+    return this._boundingCursor = {
       x: width / 2,
       y: height / 2,
     }
@@ -137,8 +182,8 @@ class Apollo {
     this.timelineCursor.current.y = this.timelineCursor.initial.y + (t * (this.timelineCursor.final.y - this.timelineCursor.initial.y));
 
     this._cursorPosition = {
-      x: Math.round(this.timelineCursor.current.x - this.boundingCursor.x),
-      y: Math.round(this.timelineCursor.current.y - this.boundingCursor.y),
+      x: Math.round(this.timelineCursor.current.x - this._boundingCursor.x),
+      y: Math.round(this.timelineCursor.current.y - this._boundingCursor.y),
     }
 
     if (this.options.mode === 'mouse') {
@@ -147,9 +192,19 @@ class Apollo {
       this._coords = this._cursorPosition;
     }
 
-    if (!this._pushing) {
-      this.options.cursor.style.webkitTransform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
-      this.options.cursor.style.transform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
+    if (this.options.type === Apollo.TYPE.HTML &&
+        this.options.hiddenUntilFirstInteraction &&
+        this.timelineCursor.initial.x !== this.timelineCursor.current.x &&
+        this.first) {
+          setTimeout(() => {
+            (<HTMLElement>this.options.cursor).style.display = 'block';
+            this.first = false;
+          }, this.options.easing.duration);
+    }
+
+    if (!this._pushing && !this.first && this.options.type === Apollo.TYPE.HTML) {
+      (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
+      (<HTMLElement>this.options.cursor).style.transform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
     }
 
     this.timelineCursor.initial.x = this.timelineCursor.current.x;
@@ -172,7 +227,7 @@ class Apollo {
       const offset = element.target.offset;
       element.rect = this.inRect(element.domElement, offset);
 
-      if (element.rect.check) {
+      if (element.rect.check && getComputedStyle(element.domElement)['pointerEvents'] !== 'none') {
         this.status = true;
         this.leave = false;
 
@@ -207,7 +262,7 @@ class Apollo {
         }
 
         element.domElement.classList.add('apollo--active');
-        this.options.cursor.classList.add('apollo__cursor--active');
+        if (this.options.type === Apollo.TYPE.HTML) (<HTMLElement>this.options.cursor).classList.add('apollo__cursor--active');
       } else if (element.domElement.classList.contains('apollo--active')) {
         element.domElement.classList.remove('apollo--active');
         element.status = false;
@@ -244,8 +299,10 @@ class Apollo {
             const coords = this.easeMagnetism(this._coords, element, delta);
 
             if (Math.round(coords.y) !== Math.round(this._coords.y) || Math.round(coords.x) !== Math.round(this._coords.x)) {
-              this.options.cursor.style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-              this.options.cursor.style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+              if (this.options.type === Apollo.TYPE.HTML) {
+                (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+                (<HTMLElement>this.options.cursor).style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+              }
             } else {
               this._pushing = false;
             }
@@ -255,7 +312,9 @@ class Apollo {
     });
 
     if (!this.status) {
-      this.options.cursor.classList.remove('apollo__cursor--active');
+      if (this.options.type === Apollo.TYPE.HTML) {
+        (<HTMLElement>this.options.cursor).classList.remove('apollo__cursor--active');
+      }
     }
   }
 
@@ -274,8 +333,8 @@ class Apollo {
     this._pulling = true;
 
     const coordsTemp : Vec2 = {
-      x: this._coords.x - (element.rect.bounding.left + element.rect.bounding.center.x) + this.boundingCursor.x,
-      y: this._coords.y - (element.rect.bounding.top + element.rect.bounding.center.y) + this.boundingCursor.y,
+      x: this._coords.x - (element.rect.bounding.left + element.rect.bounding.center.x) + this._boundingCursor.x,
+      y: this._coords.y - (element.rect.bounding.top + element.rect.bounding.center.y) + this._boundingCursor.y,
     };
 
     const coords = this.easeMagnetism(coordsTemp, element, delta);
@@ -295,12 +354,14 @@ class Apollo {
 
     this._pushing = true;
 
-    const coordsTemp = pushMode(element, this.boundingCursor);
+    const coordsTemp = pushMode(element, this._boundingCursor);
 
     const coords = this.easeMagnetism(coordsTemp, element, delta);
 
-    this.options.cursor.style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-    this.options.cursor.style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+    if (this.options.type === Apollo.TYPE.HTML) {
+      (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+      (<HTMLElement>this.options.cursor).style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+    }
   }
 
   private easeMagnetism = (tempCoords : Vec2, element : Element, delta : number) : Vec2 => {
@@ -414,6 +475,10 @@ class Apollo {
     return this._velocity;
   }
 
+  public get boundingCursor() : Vec2 {
+    return this._boundingCursor;
+  }
+
   public get distanceFromCenter() : number {
     return this._distanceFromCenter;
   }
@@ -481,6 +546,12 @@ class Apollo {
     return this.options.targets;
   }
 
+  public setCursorPosition(position : Vec2) : Vec2 {
+    this._mousePosition = position;
+
+    return this._mousePosition;
+  }
+
   public setDistanceFromCenter(el: HTMLElement | null, offset? : Vec2 | null, rect? : any) : number {
     if (el === null) throw new Error('Element cannot be null');
     if (rect === undefined) rect = this.setElBounding(el, offset);
@@ -497,10 +568,10 @@ class Apollo {
     };
 
     const distance = {
-      left: Math.abs(_left) + this.boundingCursor.x,
-      top: Math.abs(_top) + this.boundingCursor.y,
-      right: Math.abs(_right) - this.boundingCursor.x,
-      bottom: Math.abs(_bottom) - this.boundingCursor.y,
+      left: Math.abs(_left) + this._boundingCursor.x,
+      top: Math.abs(_top) + this._boundingCursor.y,
+      right: Math.abs(_right) - this._boundingCursor.x,
+      bottom: Math.abs(_bottom) - this._boundingCursor.y,
     }
 
     const ratio : Vec2 = { x: 0, y: 0 };
@@ -539,10 +610,10 @@ class Apollo {
     };
 
     const distance = {
-      left: Math.abs(_left) - this.boundingCursor.x,
-      top: Math.abs(_top) - this.boundingCursor.y,
-      right: Math.abs(_right) - this.boundingCursor.x,
-      bottom: Math.abs(_bottom) - this.boundingCursor.y,
+      left: Math.abs(_left) - this._boundingCursor.x,
+      top: Math.abs(_top) - this._boundingCursor.y,
+      right: Math.abs(_right) - this._boundingCursor.x,
+      bottom: Math.abs(_bottom) - this._boundingCursor.y,
     }
 
     const ratio : any = {
@@ -554,12 +625,12 @@ class Apollo {
 
 
     if (distance.left <= rect.offset.x) {
-      ratio.x = Math.round((Math.abs(_left) / (rect.offset.x - (this.boundingCursor.x * 2))) * 100);
+      ratio.x = Math.round((Math.abs(_left) / (rect.offset.x - (this._boundingCursor.x * 2))) * 100);
     } else {
       ratio.x = Math.round((Math.abs(_right) / rect.offset.x) * 100);
     }
     if (distance.top <= rect.offset.y) {
-      ratio.y = Math.round((Math.abs(_top) / (rect.offset.y - (this.boundingCursor.y * 2))) * 100);
+      ratio.y = Math.round((Math.abs(_top) / (rect.offset.y - (this._boundingCursor.y * 2))) * 100);
     } else {
       ratio.y = Math.round((Math.abs(_bottom) / rect.offset.y) * 100);
     }
