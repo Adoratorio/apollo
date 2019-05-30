@@ -148,15 +148,15 @@ class Apollo {
   }
 
   public setBoundingCursor = (customCursor ?: Vec2) : Vec2 => {
-    let width = 0;
-    let height = 0;
+    let width : number = 0;
+    let height : number = 0;
 
     if (this.options.cursor === null && customCursor !== undefined) {
       width = customCursor.x;
       height = customCursor.y;
     } else {
-      const width : Number = (<HTMLElement>this.options.cursor).getBoundingClientRect().width;
-      const height : Number = (<HTMLElement>this.options.cursor).getBoundingClientRect().height;
+      width = (<HTMLElement>this.options.cursor).getBoundingClientRect().width;
+      height = (<HTMLElement>this.options.cursor).getBoundingClientRect().height;
     }
 
     return this._boundingCursor = {
