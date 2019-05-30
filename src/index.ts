@@ -34,13 +34,15 @@ class Apollo {
   private domElements : Array<HTMLElement> = [];
 
   private timelineCursor : Timeline;
-  private boundingCursor : Vec2 = { x: 0, y: 0 };
+  private _boundingCursor : Vec2 = { x: 0, y: 0 };
 
   private _coords : Vec2 = { x: 0, y: 0 };
   private _mousePosition : Vec2 = { x: 0, y: 0 };
   private _cursorPosition : Vec2 = { x: 0, y: 0 };
   private _cursorPositionPrev : Vec2 = { x: 0, y: 0 };
   private _velocity : Vec2 = { x: 0, y: 0 };
+
+  private customCursor = { x: 0, y: 0 };
 
   private _distanceFromCenter : number = 0;
   private _distanceFromBorder : number = 0;
@@ -67,6 +69,7 @@ class Apollo {
       hiddenUntilFirstInteraction: false,
       detectTouch: false,
       emitGlobal: false,
+      renderByPixel: false,
       onUpdate: () => {},
       onEnter: () => {},
       onMove: () => {},
@@ -96,6 +99,10 @@ class Apollo {
     } else {
       this.first = false;
     }
+
+    this._coords = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
+    this._mousePosition = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
+    this._cursorPosition = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
 
     this.options.aion = new Aion();
     if (this.options.aion === null || typeof this.options.aion === 'undefined') {
@@ -140,10 +147,19 @@ class Apollo {
     };
   }
 
-  private setBoundingCursor = () : Vec2 => {
-    const { width, height } : ClientRect = (<HTMLElement>this.options.cursor).getBoundingClientRect();
+  public setBoundingCursor = (customCursor ?: Vec2) : Vec2 => {
+    let width = 0;
+    let height = 0;
 
-    return this.boundingCursor = {
+    if (this.options.cursor === null && customCursor !== undefined) {
+      width = customCursor.x;
+      height = customCursor.y;
+    } else {
+      const width : Number = (<HTMLElement>this.options.cursor).getBoundingClientRect().width;
+      const height : Number = (<HTMLElement>this.options.cursor).getBoundingClientRect().height;
+    }
+
+    return this._boundingCursor = {
       x: width / 2,
       y: height / 2,
     }
@@ -161,10 +177,17 @@ class Apollo {
     this.timelineCursor.current.x = this.timelineCursor.initial.x + (t * (this.timelineCursor.final.x - this.timelineCursor.initial.x));
     this.timelineCursor.current.y = this.timelineCursor.initial.y + (t * (this.timelineCursor.final.y - this.timelineCursor.initial.y));
 
-    this._cursorPosition = {
-      x: Math.round(this.timelineCursor.current.x - this.boundingCursor.x),
-      y: Math.round(this.timelineCursor.current.y - this.boundingCursor.y),
+    const cursor = {
+      x: this.timelineCursor.current.x - this._boundingCursor.x,
+      y: this.timelineCursor.current.y - this._boundingCursor.y,
     }
+
+    const roundedCursor = {
+      x: Math.round(this.timelineCursor.current.x - this._boundingCursor.x),
+      y: Math.round(this.timelineCursor.current.y - this._boundingCursor.y),
+    }
+
+    this._cursorPosition = this.options.renderByPixel ? roundedCursor : cursor;
 
     if (this.options.mode === 'mouse') {
       this._coords = this._mousePosition;
@@ -191,11 +214,11 @@ class Apollo {
     this.timelineCursor.initial.y = this.timelineCursor.current.y;
 
     this._velocity = {
-      x: Math.abs((this._cursorPosition.x - this._cursorPositionPrev.x) / delta),
-      y: Math.abs((this._cursorPosition.y - this._cursorPositionPrev.y) / delta),
+      x: Math.abs((cursor.x - this._cursorPositionPrev.x) / delta),
+      y: Math.abs((cursor.y - this._cursorPositionPrev.y) / delta),
     }
 
-    this._cursorPositionPrev = this._cursorPosition;
+    this._cursorPositionPrev = cursor;
 
     this.options.onUpdate(this._coords);
 
@@ -320,8 +343,8 @@ class Apollo {
     this._pulling = true;
 
     const coordsTemp : Vec2 = {
-      x: this._coords.x - (element.rect.bounding.left + element.rect.bounding.center.x) + this.boundingCursor.x,
-      y: this._coords.y - (element.rect.bounding.top + element.rect.bounding.center.y) + this.boundingCursor.y,
+      x: this._coords.x - (element.rect.bounding.left + element.rect.bounding.center.x) + this._boundingCursor.x,
+      y: this._coords.y - (element.rect.bounding.top + element.rect.bounding.center.y) + this._boundingCursor.y,
     };
 
     const coords = this.easeMagnetism(coordsTemp, element, delta);
@@ -341,7 +364,7 @@ class Apollo {
 
     this._pushing = true;
 
-    const coordsTemp = pushMode(element, this.boundingCursor);
+    const coordsTemp = pushMode(element, this._boundingCursor);
 
     const coords = this.easeMagnetism(coordsTemp, element, delta);
 
@@ -462,6 +485,10 @@ class Apollo {
     return this._velocity;
   }
 
+  public get boundingCursor() : Vec2 {
+    return this._boundingCursor;
+  }
+
   public get distanceFromCenter() : number {
     return this._distanceFromCenter;
   }
@@ -551,10 +578,10 @@ class Apollo {
     };
 
     const distance = {
-      left: Math.abs(_left) + this.boundingCursor.x,
-      top: Math.abs(_top) + this.boundingCursor.y,
-      right: Math.abs(_right) - this.boundingCursor.x,
-      bottom: Math.abs(_bottom) - this.boundingCursor.y,
+      left: Math.abs(_left) + this._boundingCursor.x,
+      top: Math.abs(_top) + this._boundingCursor.y,
+      right: Math.abs(_right) - this._boundingCursor.x,
+      bottom: Math.abs(_bottom) - this._boundingCursor.y,
     }
 
     const ratio : Vec2 = { x: 0, y: 0 };
@@ -593,10 +620,10 @@ class Apollo {
     };
 
     const distance = {
-      left: Math.abs(_left) - this.boundingCursor.x,
-      top: Math.abs(_top) - this.boundingCursor.y,
-      right: Math.abs(_right) - this.boundingCursor.x,
-      bottom: Math.abs(_bottom) - this.boundingCursor.y,
+      left: Math.abs(_left) - this._boundingCursor.x,
+      top: Math.abs(_top) - this._boundingCursor.y,
+      right: Math.abs(_right) - this._boundingCursor.x,
+      bottom: Math.abs(_bottom) - this._boundingCursor.y,
     }
 
     const ratio : any = {
@@ -608,12 +635,12 @@ class Apollo {
 
 
     if (distance.left <= rect.offset.x) {
-      ratio.x = Math.round((Math.abs(_left) / (rect.offset.x - (this.boundingCursor.x * 2))) * 100);
+      ratio.x = Math.round((Math.abs(_left) / (rect.offset.x - (this._boundingCursor.x * 2))) * 100);
     } else {
       ratio.x = Math.round((Math.abs(_right) / rect.offset.x) * 100);
     }
     if (distance.top <= rect.offset.y) {
-      ratio.y = Math.round((Math.abs(_top) / (rect.offset.y - (this.boundingCursor.y * 2))) * 100);
+      ratio.y = Math.round((Math.abs(_top) / (rect.offset.y - (this._boundingCursor.y * 2))) * 100);
     } else {
       ratio.y = Math.round((Math.abs(_bottom) / rect.offset.y) * 100);
     }

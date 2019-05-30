@@ -67,6 +67,7 @@ export interface ApolloOptions {
   hiddenUntilFirstInteraction : boolean,
   detectTouch: boolean,
   emitGlobal: boolean,
+  renderByPixel: boolean,
   onUpdate: Function,
   onEnter: Function,
   onMove: Function,
