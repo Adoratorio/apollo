@@ -75,14 +75,9 @@ class Apollo {
       onMove: () => {},
       onLeave: () => {},
       aion: null,
+      autoStart: false,
     }
     this.options = {...defaults, ...options};
-
-    this.timelineCursor = {
-      initial: { x: 0, y: 0 },
-      current: { x: 0, y: 0 },
-      final: { x: 0, y: 0 },
-    };
 
     this.frameHandler = (delta: number) => this.frame(delta);
     this.cursorCheckHandler = (delta: number) => this.cursorCheck(delta);
@@ -100,27 +95,39 @@ class Apollo {
       this.first = false;
     }
 
-    this._coords = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
-    this._mousePosition = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
+    this.timelineCursor = {
+      initial: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+      current: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+      final: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+    };
+
+    this._coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    this._mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     this._cursorPosition = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
 
-    this.options.aion = new Aion();
+    if (this.options.type === Apollo.TYPE.HTML) {
+      (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
+      (<HTMLElement>this.options.cursor).style.transform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
+    }
+
     if (this.options.aion === null || typeof this.options.aion === 'undefined') {
       this.engine = new Aion();
     } else {
       this.engine = this.options.aion;
     }
-    this.engine.start();
+
+    if (this.options.autoStart) this.engine.start();
+
     this.engine.add(this.frameHandler, 'cursorMove');
     this.engine.add(this.cursorCheckHandler, 'cursorCheck', true);
   }
 
   private bindMouse = () : void => {
-    document.body.addEventListener('mousemove', this.mouseMove);
+    document.body.addEventListener('mousemove', this.mouseMove, { passive: true });
     
     if (this.options.detectTouch) {
-      document.body.addEventListener('touchstart', this.touchMove);
-      document.body.addEventListener('touchmove', this.touchMove);
+      document.body.addEventListener('touchstart', this.touchMove, { passive: true });
+      document.body.addEventListener('touchmove', this.touchMove, { passive: true });
     }
   }
 

@@ -73,6 +73,7 @@ export interface ApolloOptions {
   onMove: Function,
   onLeave: Function,
   aion: Aion | null,
+  autoStart: boolean,
 }
 
 export interface Timeline {
