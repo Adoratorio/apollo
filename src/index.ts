@@ -41,6 +41,7 @@ class Apollo {
   private _cursorPosition : Vec2 = { x: 0, y: 0 };
   private _cursorPositionPrev : Vec2 = { x: 0, y: 0 };
   private _velocity : Vec2 = { x: 0, y: 0 };
+  private _direction : Vec2 = { x: 0, y: 0 };
 
   private customCursor = { x: 0, y: 0 };
 
@@ -221,9 +222,15 @@ class Apollo {
     this.timelineCursor.initial.y = this.timelineCursor.current.y;
 
     this._velocity = {
-      x: Math.abs((cursor.x - this._cursorPositionPrev.x) / delta),
-      y: Math.abs((cursor.y - this._cursorPositionPrev.y) / delta),
+      x: (cursor.x - this._cursorPositionPrev.x) / delta,
+      y: (cursor.y - this._cursorPositionPrev.y) / delta,
     }
+
+    this._direction.x = this._velocity.x > 0 ? 1 : -1;
+    this._direction.y = this._velocity.y > 0 ? 1 : -1;
+
+    this._velocity.x = Math.abs(this._velocity.x);
+    this._velocity.y = Math.abs(this._velocity.y);
 
     this._cursorPositionPrev = cursor;
 
@@ -490,6 +497,10 @@ class Apollo {
 
   public get velocity() : Vec2 {
     return this._velocity;
+  }
+
+  public get direction() : Vec2 {
+    return this._direction;
   }
 
   public get boundingCursor() : Vec2 {
