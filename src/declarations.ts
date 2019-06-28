@@ -56,6 +56,7 @@ export interface Element {
   timeline : Timeline,
   active : boolean,
   rect : any,
+  status : boolean,
 }
 
 export interface ApolloOptions {

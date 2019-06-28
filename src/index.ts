@@ -301,6 +301,14 @@ class Apollo {
             const customEvent : CustomEvent = new CustomEvent('apollo-leave', eventInit);
             window.dispatchEvent(customEvent);
           }
+
+          if (element.target.magnetism && element.target.magnetism.mode === 'push' && this._pushing && !element.status) {
+            const coords = this.easeMagnetism(this._coords, element, delta);
+
+            (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+            (<HTMLElement>this.options.cursor).style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
+            this._pushing = false;
+          }
         }
       } else {
         element.domElement.classList.remove('apollo--active');
@@ -316,20 +324,8 @@ class Apollo {
               element.domElement.style.removeProperty('webkit-transform');
               element.domElement.style.removeProperty('transform');
               element.domElement.style.removeProperty('z-index');
-
-              this._pulling = false;
             }
-          } else if (element.target.magnetism.mode === 'push' && this._pushing) {
-            const coords = this.easeMagnetism(this._coords, element, delta);
-
-            if (Math.round(coords.y) !== Math.round(this._coords.y) || Math.round(coords.x) !== Math.round(this._coords.x)) {
-              if (this.options.type === Apollo.TYPE.HTML) {
-                (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-                (<HTMLElement>this.options.cursor).style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-              }
-            } else {
-              this._pushing = false;
-            }
+            this._pulling = false;
           }
         }
       }
@@ -369,10 +365,12 @@ class Apollo {
   }
 
   private push = (element : Element, delta : number) : void => {
+    if (!element.status) return;
+
     if (!this._pushing) {
       element.timeline.initial = {
-        x: this._coords.x,
-        y: this._coords.y,
+        x: this._cursorPosition.x,
+        y: this._cursorPosition.y,
       };
     }
 
@@ -454,6 +452,7 @@ class Apollo {
             final: { x: 0, y: 0 },
           },
           rect: {},
+          status: false,
         };
 
         this.elements.push(obj);
@@ -520,13 +519,15 @@ class Apollo {
 
     const rect = this.setElBounding(el, offset);
 
+    let coords = this._coords;
+
     return {
       bounding: rect.bounding,
       offset: rect.offset,
-      check: this._coords.x >= (rect.bounding.left - rect.offset.x)
-        && this._coords.y >= (rect.bounding.top - rect.offset.y)
-        && this._coords.x <= (rect.bounding.right + rect.offset.x)
-        && this._coords.y <= (rect.bounding.bottom + rect.offset.y),
+      check: coords.x + this._boundingCursor.x >= (rect.bounding.left - rect.offset.x)
+        && coords.y + this._boundingCursor.y >= (rect.bounding.top - rect.offset.y)
+        && coords.x + this._boundingCursor.x <= (rect.bounding.right + rect.offset.x)
+        && coords.y + this._boundingCursor.y <= (rect.bounding.bottom + rect.offset.y),
     };
   }
 
@@ -550,6 +551,7 @@ class Apollo {
             final: { x: 0, y: 0 },
           },
           rect: {},
+          status: false,
         };
 
         this.elements.push(obj);
