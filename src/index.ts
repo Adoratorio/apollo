@@ -107,10 +107,10 @@ class Apollo {
     this.cursorYTimeline.final = this.mousePosition.y;
   
     const deltaT : number = Math.min(Math.max(delta, 0), this.options.easing.duration);
-    const t : number = this.options.easing.mode(deltaT / this.options.easing.duration);
+    const time : number = this.options.easing.mode(deltaT / this.options.easing.duration);
 
-    this.cursorXTimeline.current = this.cursorXTimeline.initial + t * (this.cursorXTimeline.final - this.cursorXTimeline.initial);
-    this.cursorYTimeline.current = this.cursorYTimeline.initial + t * (this.cursorYTimeline.final - this.cursorYTimeline.initial);
+    this.cursorXTimeline.current = this.cursorXTimeline.initial + (time * (this.cursorXTimeline.final - this.cursorXTimeline.initial));
+    this.cursorYTimeline.current = this.cursorYTimeline.initial + (time * (this.cursorYTimeline.final - this.cursorYTimeline.initial));
 
     const position = {
       x: this.cursorXTimeline.current - this.cursorBounding.width / 2,

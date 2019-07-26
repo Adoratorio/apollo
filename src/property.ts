@@ -16,6 +16,7 @@ class Property {
   readonly timeline : Timeline;
   readonly easing : Easing;
   readonly renderByPixel : boolean | undefined;
+  readonly precision : number = 4;
 
   constructor(descriptor : PropertyDescriptior) {
     this.key = descriptor.key;
@@ -33,20 +34,21 @@ class Property {
     };
     this._value = descriptor.initial;
     this.renderByPixel = descriptor.renderByPixel;
+    this.precision = typeof descriptor.precision !== 'undefined' ? descriptor.precision : this.precision;
   }
 
   frame(delta : number) {
     this.timeline.final = this._value;
 
     const deltaT : number = Math.min(Math.max(delta, 0), this.easing.duration);
-    const t : number = this.easing.mode(deltaT / this.easing.duration);
+    const time : number = this.easing.mode(deltaT / this.easing.duration);
 
-    this.timeline.current = this.timeline.initial + t * (this.timeline.final - this.timeline.initial);
+    this.timeline.current = this.timeline.initial + (time * (this.timeline.final - this.timeline.initial));
   }
 
   render(delta : number) {
     if (this.target !== null && typeof this.target !== 'undefined') {
-      const current = this.renderByPixel ? Math.round(this.timeline.current) : this.timeline.current;
+      const current = this.renderByPixel ? Math.round(this.timeline.current) : parseFloat(this.timeline.current.toFixed(this.precision));
       if (this.type === Apollo.PROPERTY_TYPE.TRANSFORM) {
         (this.target as HTMLElement).style.transform = `${this.key}(${current}${this.suffix})`;
       }

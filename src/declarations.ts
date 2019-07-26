@@ -23,6 +23,7 @@ export interface PropertyDescriptior {
   easing : Easing,
   initial : number,
   renderByPixel? : boolean,
+  precision? : number,
 }
 
 export enum TYPE {
