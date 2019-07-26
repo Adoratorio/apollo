@@ -1,497 +1,191 @@
 import Aion from '@adoratorio/aion';
 
 import {
-  TYPE,
-  Vec2,
   ApolloOptions,
-  FOLLOW,
-  Easing,
-  Magnetism,
-  MODE,
+  Vec2,
+  Property,
   Timeline,
-  Target,
-  Element,
-  PUSH,
-  ApolloHTMLElement,
 } from './declarations';
 
 import Easings from './easing';
-import { pushMode, editHTMLElement } from './utils';
-
 
 class Apollo {
   static EASING = Easings;
-  static TYPE = TYPE;
-  static MODE = MODE;
-  static FOLLOW = FOLLOW;
-  static PUSH = PUSH;
 
   private options : ApolloOptions;
+  private mousePosition : Vec2;
+  private cursorBounding : ClientRect;
+  private properties : Array<Property>;
   private frameHandler : Function;
-  private cursorCheckHandler : Function;
-
-  private elements : Array<Element> = [];
-  private domElements : Array<HTMLElement> = [];
-
-  private timelineCursor : Timeline;
-  private _boundingCursor : Vec2 = { x: 0, y: 0 };
-
-  private _coords : Vec2 = { x: 0, y: 0 };
-  private _mousePosition : Vec2 = { x: 0, y: 0 };
-  private _cursorPosition : Vec2 = { x: 0, y: 0 };
-  private _cursorPositionPrev : Vec2 = { x: 0, y: 0 };
+  private engine : Aion;
+  private autoUpdatePosition : boolean;
+  private cursorPosition : Vec2;
+  private cursorPositionPrev : Vec2 = { x: 0, y: 0 };
   private _velocity : Vec2 = { x: 0, y: 0 };
   private _direction : Vec2 = { x: 0, y: 0 };
-
-  private customCursor = { x: 0, y: 0 };
-
-  private _distanceFromCenter : number = 0;
-  private _distanceFromBorder : number = 0;
-
-  private _pulling : boolean = false;
-  private _pushing : boolean = false;
-
-  private status : boolean = false;
-  private leave : boolean = false;
-  private first : boolean = true;
-
-  private engine : Aion;
+  private cursorXTimeline : Timeline;
+  private cursorYTimeline : Timeline;
 
   constructor(options : Partial<ApolloOptions>) {
     const defaults : ApolloOptions = {
-      mode: FOLLOW.CURSOR,
       cursor: document.querySelector('.apollo__cursor') as HTMLElement,
-      type: Apollo.TYPE.HTML,
+      props: [],
       easing: {
-        mode: Apollo.EASING.LINEAR,
+        mode: Apollo.EASING.OUT_CUBIC,
         duration: 1000,
       },
-      targets: [],
+      // targets: [],
       hiddenUntilFirstInteraction: false,
+      initialPosition: { x: 0, y: 0 },
       detectTouch: false,
       emitGlobal: false,
-      renderByPixel: false,
-      onUpdate: () => {},
       onEnter: () => {},
-      onMove: () => {},
       onLeave: () => {},
       aion: null,
-      autoStart: false,
+      autoStartPositionUpdate: true,
+      renderByPixel: false,
     }
     this.options = {...defaults, ...options};
 
-    this.frameHandler = (delta: number) => this.frame(delta);
-    this.cursorCheckHandler = (delta: number) => this.cursorCheck(delta);
-
-    this.bindMouse();
-    this.initTargets();
-
-    if (this.options.type === Apollo.TYPE.HTML) {
-      this.setBoundingCursor();
-    }
-
-    if (this.options.hiddenUntilFirstInteraction && this.options.type === Apollo.TYPE.HTML) {
-      (<HTMLElement>this.options.cursor).style.display = 'none';
-    } else {
-      this.first = false;
-    }
-
-    this.timelineCursor = {
-      initial: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
-      current: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
-      final: { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+    // Set the initial mouse position
+    this.mousePosition = this.options.initialPosition;
+    this.cursorPosition = this.mousePosition;
+    this.cursorBounding = (this.cursorElement as HTMLElement).getBoundingClientRect();
+    this.cursorXTimeline = {
+      initial: this.cursorPosition.x,
+      current: this.cursorPosition.x,
+      final: this.cursorPosition.x,
     };
-
-    this._coords = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    this._mousePosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    this._cursorPosition = { x: window.innerWidth / 2 - this._boundingCursor.x, y: window.innerHeight / 2 - this._boundingCursor.y };
-
-    if (this.options.type === Apollo.TYPE.HTML) {
-      (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
-      (<HTMLElement>this.options.cursor).style.transform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
-    }
-
-    if (this.options.aion === null || typeof this.options.aion === 'undefined') {
-      this.engine = new Aion();
-    } else {
+    this.cursorYTimeline = {
+      initial: this.cursorPosition.y,
+      current: this.cursorPosition.y,
+      final: this.cursorPosition.y,
+    };
+    // Create or set the engine
+    if (this.options.aion !== null) {
       this.engine = this.options.aion;
+    } else {
+      this.engine = new Aion();
+      this.engine.start();
     }
+    // For each prop descriptor start the property
+    this.properties = [];
+    this.options.props.forEach((prop) => {
+      this.properties.push({
+        key: prop.key,
+        type: prop.type,
+        suffix: prop.suffix,
+        easing: prop.easing,
+        timeline: {
+          initial: prop.initial,
+          current: prop.initial,
+          final: prop.initial,
+        },
+        renderByPixel: prop.renderByPixel,
+      });
+    });
 
-    if (this.options.autoStart) this.engine.start();
+    this.frameHandler = (delta : number) => { this.frame(delta); };
+    this.engine.add(this.frameHandler, 'apollo-frame');
+    this.bindEvents();
 
-    this.engine.add(this.frameHandler, 'cursorMove');
-    this.engine.add(this.cursorCheckHandler, 'cursorCheck', true);
-  }
-
-  private bindMouse = () : void => {
-    document.body.addEventListener('mousemove', this.mouseMove, { passive: true });
-    
-    if (this.options.detectTouch) {
-      document.body.addEventListener('touchstart', this.touchMove, { passive: true });
-      document.body.addEventListener('touchmove', this.touchMove, { passive: true });
-    }
-  }
-
-  private unbindMouse = () : void => {
-    document.body.removeEventListener('mousemove', this.mouseMove);
-
-    if (this.options.detectTouch) {
-      document.body.removeEventListener('touchstart', this.touchMove);
-      document.body.removeEventListener('touchmove', this.touchMove);
-    }
+    this.autoUpdatePosition = false;
+    if (this.options.autoStartPositionUpdate) this.startPositionUpdate();
   }
 
   private mouseMove = (event : MouseEvent) : void => {
-    this._mousePosition = {
+    this.mousePosition = {
       x: event.clientX,
       y: event.clientY,
     };
   }
 
   private touchMove = (event : TouchEvent) : void => {
-    this._mousePosition = {
+    this.mousePosition = {
       x: event.touches[0].clientX,
       y: event.touches[0].clientY,
     };
   }
 
-  public setBoundingCursor = (customCursor ?: Vec2) : Vec2 => {
-    let width : number = 0;
-    let height : number = 0;
-
-    if (this.options.cursor === null && customCursor !== undefined) {
-      width = customCursor.x;
-      height = customCursor.y;
-    } else {
-      width = (<HTMLElement>this.options.cursor).getBoundingClientRect().width;
-      height = (<HTMLElement>this.options.cursor).getBoundingClientRect().height;
-    }
-
-    return this._boundingCursor = {
-      x: width / 2,
-      y: height / 2,
-    }
-  }
-
   private frame = (delta : number) : void => {
-    this.timelineCursor.final = {
-      x: this._mousePosition.x,
-      y: this._mousePosition.y,
-    };
-
-    const deltaT : number = Math.min(Math.max(delta, 0), this.options.easing.duration);
+    this.cursorXTimeline.final = this.mousePosition.x;
+    this.cursorYTimeline.final = this.mousePosition.y;
+  
+    const deltaT : number = Math.min(Math.max(delta), this.options.easing.duration);
     const t : number = this.options.easing.mode(deltaT / this.options.easing.duration);
 
-    this.timelineCursor.current.x = this.timelineCursor.initial.x + (t * (this.timelineCursor.final.x - this.timelineCursor.initial.x));
-    this.timelineCursor.current.y = this.timelineCursor.initial.y + (t * (this.timelineCursor.final.y - this.timelineCursor.initial.y));
+    this.cursorXTimeline.current = this.cursorXTimeline.initial + t * (this.cursorXTimeline.final - this.cursorXTimeline.initial);
+    this.cursorYTimeline.current = this.cursorYTimeline.initial + t * (this.cursorYTimeline.final - this.cursorYTimeline.initial);
 
-    const cursor = {
-      x: this.timelineCursor.current.x - this._boundingCursor.x,
-      y: this.timelineCursor.current.y - this._boundingCursor.y,
+    const position = {
+      x: this.cursorXTimeline.current - this.cursorBounding.width / 2,
+      y: this.cursorYTimeline.current - this.cursorBounding.height / 2,
+    };
+
+    const roundedPosition = {
+      x: Math.round(this.cursorXTimeline.current - this.cursorBounding.width / 2),
+      y: Math.round(this.cursorYTimeline.current - this.cursorBounding.height / 2),
+    };
+
+    this.cursorPosition = this.options.renderByPixel ? roundedPosition : position;
+    
+    this.render(delta);
+  }
+  
+  private render = (delta : number) : void => {
+    if (this.cursorElement !== null) {
+      if (this.autoUpdatePosition) {
+        const transform = `translate3d(${this.cursorPosition.x}px, ${this.cursorPosition.y}px, 0px)`;
+        (this.cursorElement as HTMLElement).style.transform = transform;
+      }
     }
 
-    const roundedCursor = {
-      x: Math.round(this.timelineCursor.current.x - this._boundingCursor.x),
-      y: Math.round(this.timelineCursor.current.y - this._boundingCursor.y),
-    }
+    this.postRender(delta);
+  }
 
-    this._cursorPosition = this.options.renderByPixel ? roundedCursor : cursor;
-
-    if (this.options.mode === 'mouse') {
-      this._coords = this._mousePosition;
-    } else if (this.options.mode === 'cursor') {
-      this._coords = this._cursorPosition;
-    }
-
-    if (this.options.type === Apollo.TYPE.HTML &&
-        this.options.hiddenUntilFirstInteraction &&
-        this.timelineCursor.initial.x !== this.timelineCursor.current.x &&
-        this.first) {
-          setTimeout(() => {
-            (<HTMLElement>this.options.cursor).style.display = 'block';
-            this.first = false;
-          }, this.options.easing.duration);
-    }
-
-    if (!this._pushing && !this.first && this.options.type === Apollo.TYPE.HTML) {
-      (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
-      (<HTMLElement>this.options.cursor).style.transform = `translate3d(${this._cursorPosition.x}px, ${this._cursorPosition.y}px, 0px)`;
-    }
-
-    this.timelineCursor.initial.x = this.timelineCursor.current.x;
-    this.timelineCursor.initial.y = this.timelineCursor.current.y;
+  private postRender(delta : number) {
+    this.cursorXTimeline.initial = this.cursorXTimeline.current;
+    this.cursorYTimeline.initial = this.cursorYTimeline.current;
 
     this._velocity = {
-      x: (cursor.x - this._cursorPositionPrev.x) / delta,
-      y: (cursor.y - this._cursorPositionPrev.y) / delta,
-    }
-
-    this._direction.x = this._velocity.x > 0 ? 1 : -1;
-    this._direction.y = this._velocity.y > 0 ? 1 : -1;
-
-    this._velocity.x = Math.abs(this._velocity.x);
-    this._velocity.y = Math.abs(this._velocity.y);
-
-    this._cursorPositionPrev = cursor;
-
-    this.options.onUpdate(this._coords);
-
-    if (this.options.emitGlobal) {
-      const eventInit : CustomEventInit = {};
-      eventInit.detail = this._coords;
-      const customEvent : CustomEvent = new CustomEvent('apollo-update', eventInit);
-      window.dispatchEvent(customEvent);
-    }
-  }
-
-  private cursorCheck = (delta : number) : void => {
-    this.status = false;
-
-    this.elements.forEach((element : any) => {
-      const offset = element.target.offset;
-      element.rect = this.inRect(element.domElement, offset);
-
-      if (element.rect.check && getComputedStyle(element.domElement)['pointerEvents'] !== 'none') {
-        this.status = true;
-        this.leave = false;
-
-        if (!element.status) {
-          this.options.onEnter(element);
-
-          if (this.options.emitGlobal) {
-            const eventInit : CustomEventInit = {};
-            eventInit.detail = element;
-            const customEvent : CustomEvent = new CustomEvent('apollo-enter', eventInit);
-            window.dispatchEvent(customEvent);
-          }
-
-        } else {
-          this.options.onMove(element);
-
-          if (this.options.emitGlobal) {
-            const eventInit : CustomEventInit = {};
-            eventInit.detail = element;
-            const customEvent : CustomEvent = new CustomEvent('apollo-move', eventInit);
-            window.dispatchEvent(customEvent);
-          }
-        }
-
-        element.status = true;
-
-        this._distanceFromCenter = this.setDistanceFromCenter(element.domElement, element.target.offset, element.rect);
-        this._distanceFromBorder = this.setDistanceFromBorder(element.domElement, element.target.offset, element.rect);
-
-        if (element.target.magnetism) {
-          this.setMagnetism(element, delta);
-        }
-
-        element.domElement.classList.add('apollo--active');
-        if (this.options.type === Apollo.TYPE.HTML) (<HTMLElement>this.options.cursor).classList.add('apollo__cursor--active');
-      } else if (element.domElement.classList.contains('apollo--active')) {
-        element.domElement.classList.remove('apollo--active');
-        element.status = false;
-
-        if (!this.leave) {
-          this.leave = true;
-          this.options.onLeave(element);
-
-          if (this.options.emitGlobal) {
-            const eventInit : CustomEventInit = {};
-            eventInit.detail = element;
-            const customEvent : CustomEvent = new CustomEvent('apollo-leave', eventInit);
-            window.dispatchEvent(customEvent);
-          }
-
-          if (element.target.magnetism && element.target.magnetism.mode === 'push' && this._pushing && !element.status) {
-            const coords = this.easeMagnetism(this._coords, element, delta);
-
-            (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-            (<HTMLElement>this.options.cursor).style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-            this._pushing = false;
-          }
-        }
-      } else {
-        element.domElement.classList.remove('apollo--active');
-
-        if (element.target.magnetism) {
-          if (element.target.magnetism.mode === 'pull') {
-            const coords = this.easeMagnetism({ x: 0, y: 0 }, element, delta);
-
-            if (Math.round(coords.y) !== 0 || Math.round(coords.x) !== 0) {
-              element.domElement.style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-              element.domElement.style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-            } else {
-              element.domElement.style.removeProperty('webkit-transform');
-              element.domElement.style.removeProperty('transform');
-              element.domElement.style.removeProperty('z-index');
-            }
-            this._pulling = false;
-          }
-        }
-      }
-    });
-
-    if (!this.status) {
-      if (this.options.type === Apollo.TYPE.HTML) {
-        (<HTMLElement>this.options.cursor).classList.remove('apollo__cursor--active');
-      }
-    }
-  }
-
-  private setMagnetism = (element : Element, delta : number) : void => {
-    const magnetism = element.target.magnetism as Magnetism;
-    const mode : MODE = magnetism.mode;
-
-    if (mode === 'pull') {
-      this.pull(element, delta);
-    } else if (mode === 'push') {
-      this.push(element, delta);
-    }
-  }
-
-  private pull = (element : Element, delta : number) : void => {
-    this._pulling = true;
-
-    const coordsTemp : Vec2 = {
-      x: this._coords.x - (element.rect.bounding.left + element.rect.bounding.center.x) + this._boundingCursor.x,
-      y: this._coords.y - (element.rect.bounding.top + element.rect.bounding.center.y) + this._boundingCursor.y,
+      x: (this.cursorPosition.x - this.cursorPositionPrev.x) / delta,
+      y: (this.cursorPosition.y - this.cursorPositionPrev.y) / delta,
     };
 
-    const coords = this.easeMagnetism(coordsTemp, element, delta);
-
-    element.domElement.style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-    element.domElement.style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-    element.domElement.style.zIndex = '10';
-  }
-
-  private push = (element : Element, delta : number) : void => {
-    if (!element.status) return;
-
-    if (!this._pushing) {
-      element.timeline.initial = {
-        x: this._cursorPosition.x,
-        y: this._cursorPosition.y,
-      };
-    }
-
-    this._pushing = true;
-
-    const coordsTemp = pushMode(element, this._boundingCursor);
-
-    const coords = this.easeMagnetism(coordsTemp, element, delta);
-
-    if (this.options.type === Apollo.TYPE.HTML) {
-      (<HTMLElement>this.options.cursor).style.webkitTransform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-      (<HTMLElement>this.options.cursor).style.transform = `translate3d(${coords.x}px, ${coords.y}px, 0px)`;
-    }
-  }
-
-  private easeMagnetism = (tempCoords : Vec2, element : Element, delta : number) : Vec2 => {
-    element.timeline.final = {
-      x: tempCoords.x,
-      y: tempCoords.y,
+    this._direction = {
+      x: this.velocity.x > 0 ? 1 : -1,
+      y: this.velocity.y > 0 ? 1 : -1,
     };
 
-    const deltaT : number = Math.min(Math.max(delta, 0), (<Magnetism>element.target.magnetism).easing.duration);
-    const t : number = (<Magnetism>element.target.magnetism).easing.mode(deltaT / (<Magnetism>element.target.magnetism).easing.duration);
+    this.velocity.x = Math.abs(this.velocity.x);
+    this.velocity.y = Math.abs(this.velocity.y);
 
-    element.timeline.current.x = element.timeline.initial.x + (t * (element.timeline.final.x - element.timeline.initial.x));
-    element.timeline.current.y = element.timeline.initial.y + (t * (element.timeline.final.y - element.timeline.initial.y));
+    this.cursorPositionPrev = this.cursorPosition;
+  }
 
-    const coords = {
-      x: element.timeline.current.x,
-      y: element.timeline.current.y,
+  private bindEvents() {
+    document.body.addEventListener('mousemove', this.mouseMove, { passive: true });
+
+    if (this.options.detectTouch) {
+      document.body.addEventListener('touchstart', this.touchMove, { passive: true });
+      document.body.addEventListener('touchmove', this.touchMove, { passive: true });
     }
-
-    element.timeline.initial.x = element.timeline.current.x;
-    element.timeline.initial.y = element.timeline.current.y;
-
-    return coords;
   }
 
-  private setElBounding = (el : HTMLElement, offset? : Vec2 | null) : any => {
-    let bounding : ClientRect = el.getBoundingClientRect();
-
-    const _bounding : any = bounding;
-
-    _bounding.center = {
-      x: bounding.width / 2,
-      y: bounding.height / 2,
-    }
-
-    const offsetTemp : Vec2 = {
-      x: 0,
-      y: 0,
-    };
-
-    const _offset : Vec2 = {...offsetTemp, ...offset};
-
-    return {
-      bounding: _bounding,
-      offset: _offset,
-    };
+  public startPositionUpdate() {
+    this.autoUpdatePosition = true;
   }
 
-  private initTargets = () : Array<HTMLElement> => {
-    this.options.targets.forEach((target) => {
-      if (target.magnetism && (<Magnetism>target.magnetism).mode === Apollo.MODE.PUSH && (<Magnetism>target.magnetism).options === undefined) {
-        (<Magnetism>target.magnetism).options = Apollo.PUSH.CENTER;
-      }
-
-      target.elements.forEach((element, index) => {
-        (<ApolloHTMLElement>element).apolloId = `${target.id}-${index}`;
-
-        const obj = {
-          domElement: element,
-          apolloId: `${target.id}-${index}`,
-          target,
-          active: false,
-          timeline: {
-            initial: { x: 0, y: 0 },
-            current: { x: 0, y: 0 },
-            final: { x: 0, y: 0 },
-          },
-          rect: {},
-          status: false,
-        };
-
-        this.elements.push(obj);
-      });
-
-      this.domElements.push(...target.elements);
-    });
-
-    return this.domElements;
+  public pausePositionUpdate() {
+    this.autoUpdatePosition = false;
   }
 
-  private detachDomElements = (elements : Array<HTMLElement> | null) : any => {
-    if (elements !== null) {
-      elements.forEach((element) => {
-        this.elements = this.elements.filter(el => (<ApolloHTMLElement>el.domElement).apolloId !== (<ApolloHTMLElement>element).apolloId);
-        this.domElements = this.domElements.filter(el => (<ApolloHTMLElement>el).apolloId !== (<ApolloHTMLElement>element).apolloId);
-      });
-
-    } else {
-      this.elements = [];
-      this.domElements = [];
-    }
-
-    return {
-      domElements: this.domElements,
-      elements: this.elements,
-    };
-  }
-
-  public get mouse() : Vec2 {
-    return this._mousePosition;
-  }
-
-  public get cursor() : Vec2 {
-    return this._cursorPosition;
+  public get cursorElement() : Element | null {
+    return this.options.cursor;
   }
 
   public get coords() : Vec2 {
-    return this._coords;
+    return this.cursorPosition;
   }
 
   public get velocity() : Vec2 {
@@ -500,175 +194,6 @@ class Apollo {
 
   public get direction() : Vec2 {
     return this._direction;
-  }
-
-  public get boundingCursor() : Vec2 {
-    return this._boundingCursor;
-  }
-
-  public get distanceFromCenter() : number {
-    return this._distanceFromCenter;
-  }
-
-  public get distanceFromBorder() : number {
-    return this._distanceFromBorder;
-  }
-
-  public inRect = (el: HTMLElement | null, offset? : Vec2 | null) : any => {
-    if (el === null) throw new Error('Element cannot be null');
-
-    const rect = this.setElBounding(el, offset);
-
-    let coords = this._coords;
-
-    return {
-      bounding: rect.bounding,
-      offset: rect.offset,
-      check: coords.x + this._boundingCursor.x >= (rect.bounding.left - rect.offset.x)
-        && coords.y + this._boundingCursor.y >= (rect.bounding.top - rect.offset.y)
-        && coords.x + this._boundingCursor.x <= (rect.bounding.right + rect.offset.x)
-        && coords.y + this._boundingCursor.y <= (rect.bounding.bottom + rect.offset.y),
-    };
-  }
-
-  public addTargets = (targets : Array<Target>) : Array<Target> => {
-    targets.forEach((target) => {
-      if (target.magnetism && (<Magnetism>target.magnetism).mode === Apollo.MODE.PUSH && (<Magnetism>target.magnetism).options === undefined) {
-        (<Magnetism>target.magnetism).options = Apollo.PUSH.CENTER;
-      }
-
-      target.elements.forEach((element, index) => {
-        (<ApolloHTMLElement>element).apolloId = `${target.id}-${index}`;
-
-        const obj = {
-          domElement: element,
-          apolloId: `${target.id}-${index}`,
-          target,
-          active: false,
-          timeline: {
-            initial: { x: 0, y: 0 },
-            current: { x: 0, y: 0 },
-            final: { x: 0, y: 0 },
-          },
-          rect: {},
-          status: false,
-        };
-
-        this.elements.push(obj);
-      });
-
-      this.domElements.push(...target.elements);
-    });
-
-    this.options.targets.push(...targets);
-
-    return this.options.targets;
-  }
-
-  public removeTarget = (targetId : string) : Array<Target> => {
-    const targets = this.options.targets.filter(target => target.id === targetId);
-    this.options.targets = this.options.targets.filter(target => target.id !== targetId);
-
-    targets.forEach((target) => {
-      this.detachDomElements(target.elements);
-    });
-
-    return this.options.targets;
-  }
-
-  public setCursorPosition(position : Vec2) : Vec2 {
-    this._mousePosition = position;
-
-    return this._mousePosition;
-  }
-
-  public setDistanceFromCenter(el: HTMLElement | null, offset? : Vec2 | null, rect? : any) : number {
-    if (el === null) throw new Error('Element cannot be null');
-    if (rect === undefined) rect = this.setElBounding(el, offset);
-
-    const _left = (rect.bounding.left - rect.offset.x) - this._coords.x;
-    const _top = (rect.bounding.top - rect.offset.y) - this._coords.y;
-
-    const _right = (rect.bounding.right + rect.offset.x) - this._coords.x;
-    const _bottom = (rect.bounding.bottom + rect.offset.y) - this._coords.y;
-
-    const _center = {
-      x: (_right - _left) / 2,
-      y: (_bottom - _top) / 2,
-    };
-
-    const distance = {
-      left: Math.abs(_left) + this._boundingCursor.x,
-      top: Math.abs(_top) + this._boundingCursor.y,
-      right: Math.abs(_right) - this._boundingCursor.x,
-      bottom: Math.abs(_bottom) - this._boundingCursor.y,
-    }
-
-    const ratio : Vec2 = { x: 0, y: 0 };
-
-
-    if (distance.left <= _center.x) {
-      ratio.x = Math.round((distance.left / _center.x) * 100);
-    } else {
-      ratio.x = Math.round((distance.right / _center.x) * 100);
-    }
-    if (distance.top <= _center.y) {
-      ratio.y = Math.round((distance.top / _center.y) * 100);
-    } else {
-      ratio.y = Math.round((distance.bottom / _center.y) * 100);
-    }
-
-    let distanceRatio : number = Math.min(Math.abs(ratio.x), Math.abs(ratio.y)) / 100;
-    distanceRatio = Math.min(Math.max(distanceRatio, 0), 1);
-
-    return distanceRatio;
-  }
-
-  public setDistanceFromBorder(el: HTMLElement | null, offset? : Vec2 | null, rect? : any) : number {
-    if (el === null) throw new Error('Element cannot be null');
-    if (rect === undefined) rect = this.setElBounding(el, offset);
-
-    const _left = (rect.bounding.left - rect.offset.x) - this._coords.x;
-    const _top = (rect.bounding.top - rect.offset.y) - this._coords.y;
-
-    const _right = (rect.bounding.right + rect.offset.x) - this._coords.x;
-    const _bottom = (rect.bounding.bottom + rect.offset.y) - this._coords.y;
-
-    const _center = {
-      x: (_right - _left) / 2,
-      y: (_bottom - _top) / 2,
-    };
-
-    const distance = {
-      left: Math.abs(_left) - this._boundingCursor.x,
-      top: Math.abs(_top) - this._boundingCursor.y,
-      right: Math.abs(_right) - this._boundingCursor.x,
-      bottom: Math.abs(_bottom) - this._boundingCursor.y,
-    }
-
-    const ratio : any = {
-      left: 0,
-      top: 0,
-      right: 0,
-      bottom: 0,
-    };
-
-
-    if (distance.left <= rect.offset.x) {
-      ratio.x = Math.round((Math.abs(_left) / (rect.offset.x - (this._boundingCursor.x * 2))) * 100);
-    } else {
-      ratio.x = Math.round((Math.abs(_right) / rect.offset.x) * 100);
-    }
-    if (distance.top <= rect.offset.y) {
-      ratio.y = Math.round((Math.abs(_top) / (rect.offset.y - (this._boundingCursor.y * 2))) * 100);
-    } else {
-      ratio.y = Math.round((Math.abs(_bottom) / rect.offset.y) * 100);
-    }
-
-    let distanceRatio : number = Math.min(Math.abs(ratio.x), Math.abs(ratio.y)) / 100;
-    distanceRatio = Math.min(Math.max(distanceRatio, 0), 1);
-
-    return distanceRatio;
   }
 }
 
