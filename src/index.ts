@@ -3,19 +3,23 @@ import Aion from '@adoratorio/aion';
 import {
   ApolloOptions,
   Vec2,
-  Property,
   Timeline,
+  PROPERTY_TYPE,
+  PROPERTY_SUFFIX,
 } from './declarations';
 
 import Easings from './easing';
+import Property from './property';
 
 class Apollo {
   static EASING = Easings;
+  static PROPERTY_TYPE = PROPERTY_TYPE;
+  static PROPERTY_SUFFIX = PROPERTY_SUFFIX;
 
   private options : ApolloOptions;
   private mousePosition : Vec2;
   private cursorBounding : ClientRect;
-  private properties : Array<Property>;
+  private _properties : Array<Property>;
   private frameHandler : Function;
   private engine : Aion;
   private autoUpdatePosition : boolean;
@@ -69,20 +73,9 @@ class Apollo {
       this.engine.start();
     }
     // For each prop descriptor start the property
-    this.properties = [];
+    this._properties = [];
     this.options.props.forEach((prop) => {
-      this.properties.push({
-        key: prop.key,
-        type: prop.type,
-        suffix: prop.suffix,
-        easing: prop.easing,
-        timeline: {
-          initial: prop.initial,
-          current: prop.initial,
-          final: prop.initial,
-        },
-        renderByPixel: prop.renderByPixel,
-      });
+      this._properties.push(new Property(prop));
     });
 
     this.frameHandler = (delta : number) => { this.frame(delta); };
@@ -108,10 +101,12 @@ class Apollo {
   }
 
   private frame = (delta : number) : void => {
+    this._properties.forEach(property => property.frame(delta));
+
     this.cursorXTimeline.final = this.mousePosition.x;
     this.cursorYTimeline.final = this.mousePosition.y;
   
-    const deltaT : number = Math.min(Math.max(delta), this.options.easing.duration);
+    const deltaT : number = Math.min(Math.max(delta, 0), this.options.easing.duration);
     const t : number = this.options.easing.mode(deltaT / this.options.easing.duration);
 
     this.cursorXTimeline.current = this.cursorXTimeline.initial + t * (this.cursorXTimeline.final - this.cursorXTimeline.initial);
@@ -133,6 +128,8 @@ class Apollo {
   }
   
   private render = (delta : number) : void => {
+    this._properties.forEach(property => property.render(delta));
+
     if (this.cursorElement !== null) {
       if (this.autoUpdatePosition) {
         const transform = `translate3d(${this.cursorPosition.x}px, ${this.cursorPosition.y}px, 0px)`;
@@ -144,6 +141,8 @@ class Apollo {
   }
 
   private postRender(delta : number) {
+    this._properties.forEach(property => property.postRender(delta));
+
     this.cursorXTimeline.initial = this.cursorXTimeline.current;
     this.cursorYTimeline.initial = this.cursorYTimeline.current;
 
@@ -194,6 +193,10 @@ class Apollo {
 
   public get direction() : Vec2 {
     return this._direction;
+  }
+
+  public get properties() : Array<Property> {
+    return this._properties;
   }
 }
 

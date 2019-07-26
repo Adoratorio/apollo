@@ -15,22 +15,14 @@ export enum PROPERTY_TYPE {
   ATTRIBUTE = 'attribute',
 }
 
-export interface Property {
-  key : string,
-  type : PROPERTY_TYPE,
-  suffix : PROPERTY_SUFFIX,
-  timeline : Timeline,
-  easing : Easing,
-  renderByPixel : boolean,
-}
-
 export interface PropertyDescriptior {
   key : string,
   type : PROPERTY_TYPE,
+  target? : Element | null,
   suffix : PROPERTY_SUFFIX,
   easing : Easing,
   initial : number,
-  renderByPixel : boolean,
+  renderByPixel? : boolean,
 }
 
 export enum TYPE {
