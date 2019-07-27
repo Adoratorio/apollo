@@ -28,6 +28,8 @@ class Property {
       duration: 400,
     };
     this.timeline = {
+      start: 0,
+      duration: this.easing.duration,
       initial: descriptor.initial,
       final: descriptor.initial,
       current: descriptor.initial,

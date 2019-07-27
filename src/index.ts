@@ -1,5 +1,4 @@
 import Aion from '@adoratorio/aion';
-
 import {
   ApolloOptions,
   Vec2,
@@ -7,7 +6,6 @@ import {
   PROPERTY_TYPE,
   PROPERTY_SUFFIX,
 } from './declarations';
-
 import Easings from './easing';
 import Property from './property';
 
@@ -56,11 +54,15 @@ class Apollo {
     this.cursorPosition = this.mousePosition;
     this.cursorBounding = (this.cursorElement as HTMLElement).getBoundingClientRect();
     this.cursorXTimeline = {
+      start: 0,
+      duration: this.options.easing.duration,
       initial: this.cursorPosition.x,
       current: this.cursorPosition.x,
       final: this.cursorPosition.x,
     };
     this.cursorYTimeline = {
+      start: 0,
+      duration: this.options.easing.duration,
       initial: this.cursorPosition.y,
       current: this.cursorPosition.y,
       final: this.cursorPosition.y,
@@ -84,20 +86,6 @@ class Apollo {
 
     this.autoUpdatePosition = false;
     if (this.options.autoStartPositionUpdate) this.startPositionUpdate();
-  }
-
-  private mouseMove = (event : MouseEvent) : void => {
-    this.mousePosition = {
-      x: event.clientX,
-      y: event.clientY,
-    };
-  }
-
-  private touchMove = (event : TouchEvent) : void => {
-    this.mousePosition = {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY,
-    };
   }
 
   private frame = (delta : number) : void => {
@@ -169,6 +157,20 @@ class Apollo {
       document.body.addEventListener('touchstart', this.touchMove, { passive: true });
       document.body.addEventListener('touchmove', this.touchMove, { passive: true });
     }
+  }
+
+  private mouseMove = (event : MouseEvent) : void => {
+    this.mousePosition = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+  }
+
+  private touchMove = (event : TouchEvent) : void => {
+    this.mousePosition = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY,
+    };
   }
 
   public startPositionUpdate() {

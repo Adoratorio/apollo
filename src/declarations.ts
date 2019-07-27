@@ -59,6 +59,8 @@ export interface ApolloOptions {
 }
 
 export interface Timeline {
+  start : number,
+  duration : number,
   initial: number,
   current: number,
   final: number,
