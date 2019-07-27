@@ -16,7 +16,6 @@ class Property {
   readonly timeline : Timeline;
   readonly easing : Easing;
   readonly renderByPixel : boolean | undefined;
-  readonly precision : number = 4;
 
   constructor(descriptor : PropertyDescriptior) {
     this.key = descriptor.key;
@@ -33,7 +32,6 @@ class Property {
     };
     this._value = descriptor.initial;
     this.renderByPixel = descriptor.renderByPixel;
-    this.precision = typeof descriptor.precision !== 'undefined' ? descriptor.precision : this.precision;
   }
 
   frame(delta : number) {
@@ -47,7 +45,7 @@ class Property {
 
   render(delta : number) {
     if (this.target !== null && typeof this.target !== 'undefined') {
-      const current = this.renderByPixel ? Math.round(this.timeline.current) : parseFloat(this.timeline.current.toFixed(this.precision));
+      const current = this.renderByPixel ? Math.round(this.timeline.current) : this.timeline.current;
       if (this.type === Apollo.PROPERTY_TYPE.TRANSFORM) {
         (this.target as HTMLElement).style.transform = `${this.key}(${current}${this.suffix})`;
       }
