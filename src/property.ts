@@ -23,10 +23,7 @@ class Property {
     this.type = descriptor.type;
     this.target = descriptor.target;
     this.suffix = descriptor.suffix;
-    this.easing = {
-      mode: Apollo.EASING.LINEAR,
-      duration: 400,
-    };
+    this.easing = descriptor.easing;
     this.timeline = {
       start: 0,
       duration: this.easing.duration,
