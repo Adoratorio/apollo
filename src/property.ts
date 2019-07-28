@@ -35,10 +35,9 @@ class Property {
   }
 
   frame(delta : number) {
-    this.timeline.final = this._value;
-
-    const deltaT : number = Math.min(Math.max(delta, 0), this.easing.duration);
-    const time : number = this.easing.mode(deltaT / this.easing.duration);
+    const deltaT : number = performance.now() - this.timeline.start;
+    const deltaTClamp : number = Math.min(Math.max(deltaT, 0), this.timeline.duration);
+    const time : number = this.easing.mode(deltaTClamp / this.timeline.duration);
 
     this.timeline.current = this.timeline.initial + (time * (this.timeline.final - this.timeline.initial));
   }
@@ -59,7 +58,7 @@ class Property {
   }
 
   postRender(delta : number) {
-    this.timeline.initial = this.timeline.current;
+    this._value = this.timeline.current;
   }
 
   public get value() {
@@ -67,7 +66,9 @@ class Property {
   }
 
   public set value(value : number) {
-    this._value = value;
+    this.timeline.start = performance.now();
+    this.timeline.initial = this._value;
+    this.timeline.final = value;
   }
 }
 
