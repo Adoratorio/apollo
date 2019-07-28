@@ -53,7 +53,6 @@ export interface ApolloOptions {
   onEnter : Function,
   onLeave : Function,
   aion : Aion | null,
-  autoStartPositionUpdate : boolean,
   renderByPixel : boolean,
 }
 

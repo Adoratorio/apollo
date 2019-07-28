@@ -20,7 +20,7 @@ class Apollo {
   private _properties : Array<Property>;
   private frameHandler : Function;
   private engine : Aion;
-  private autoUpdatePosition : boolean;
+  private _trackMouse : boolean;
   private cursorPosition : Vec2;
   private cursorPositionPrev : Vec2 = { x: 0, y: 0 };
   private _velocity : Vec2 = { x: 0, y: 0 };
@@ -44,7 +44,6 @@ class Apollo {
       onEnter: () => {},
       onLeave: () => {},
       aion: null,
-      autoStartPositionUpdate: true,
       renderByPixel: false,
     }
     this.options = {...defaults, ...options};
@@ -84,8 +83,7 @@ class Apollo {
     this.engine.add(this.frameHandler, 'apollo-frame');
     this.bindEvents();
 
-    this.autoUpdatePosition = false;
-    if (this.options.autoStartPositionUpdate) this.startPositionUpdate();
+    this._trackMouse = true;
   }
 
   private frame = (delta : number) : void => {
@@ -119,10 +117,8 @@ class Apollo {
     this._properties.forEach(property => property.render(delta));
 
     if (this.cursorElement !== null) {
-      if (this.autoUpdatePosition) {
-        const transform = `translate3d(${this.cursorPosition.x}px, ${this.cursorPosition.y}px, 0px)`;
-        (this.cursorElement as HTMLElement).style.transform = transform;
-      }
+      const transform = `translate3d(${this.cursorPosition.x}px, ${this.cursorPosition.y}px, 0px)`;
+      (this.cursorElement as HTMLElement).style.transform = transform;
     }
 
     this.postRender(delta);
@@ -160,6 +156,7 @@ class Apollo {
   }
 
   private mouseMove = (event : MouseEvent) : void => {
+    if (!this._trackMouse) return;
     this.mousePosition = {
       x: event.clientX,
       y: event.clientY,
@@ -167,18 +164,27 @@ class Apollo {
   }
 
   private touchMove = (event : TouchEvent) : void => {
+    if (!this._trackMouse) return;
     this.mousePosition = {
       x: event.touches[0].clientX,
       y: event.touches[0].clientY,
     };
   }
 
-  public startPositionUpdate() {
-    this.autoUpdatePosition = true;
+  public get trackMouse() : boolean {
+    return this._trackMouse;
   }
 
-  public pausePositionUpdate() {
-    this.autoUpdatePosition = false;
+  public set trackMouse(value : boolean) {
+    this._trackMouse = value;
+  }
+
+  public startMouseTracking() {
+    this._trackMouse = true;
+  }
+
+  public stopMouseTracking() {
+    this._trackMouse = false;
   }
 
   public get cursorElement() : Element | null {
@@ -187,6 +193,10 @@ class Apollo {
 
   public get coords() : Vec2 {
     return this.cursorPosition;
+  }
+
+  public set coords(coords : Vec2) {
+    this.mousePosition = coords;
   }
 
   public get velocity() : Vec2 {
