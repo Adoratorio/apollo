@@ -22,7 +22,7 @@ export interface PropertyDescriptior {
   suffix : PROPERTY_SUFFIX,
   easing : Easing,
   initial : number,
-  renderByPixel? : boolean,
+  precision? : number,
 }
 
 export enum TYPE {

@@ -6,6 +6,7 @@ import {
   PropertyDescriptior,
   Easing,
 } from "./declarations";
+import { updateTransform } from "./utils";
 
 class Property {
   private _value : number;
@@ -15,7 +16,7 @@ class Property {
   readonly suffix : PROPERTY_SUFFIX ;
   readonly timeline : Timeline;
   readonly easing : Easing;
-  readonly renderByPixel : boolean | undefined;
+  readonly precision : number;
 
   constructor(descriptor : PropertyDescriptior) {
     this.key = descriptor.key;
@@ -31,7 +32,7 @@ class Property {
       current: descriptor.initial,
     };
     this._value = descriptor.initial;
-    this.renderByPixel = descriptor.renderByPixel;
+    this.precision = descriptor.precision || 4;
   }
 
   frame(delta : number) {
@@ -44,9 +45,13 @@ class Property {
 
   render(delta : number) {
     if (this.target !== null && typeof this.target !== 'undefined') {
-      const current = this.renderByPixel ? Math.round(this.timeline.current) : this.timeline.current;
+      const current = parseFloat(this.timeline.current.toFixed(this.precision));
       if (this.type === Apollo.PROPERTY_TYPE.TRANSFORM) {
-        (this.target as HTMLElement).style.transform = `${this.key}(${current}${this.suffix})`;
+        const transform = (this.target as HTMLElement).style.transform;
+        if (transform !== null) {
+          const updated = updateTransform(transform, this.key, this.value, this.suffix);
+          (this.target as HTMLElement).style.transform = updated || '';
+        }
       }
       if (this.type === Apollo.PROPERTY_TYPE.STYLE) {
         (this.target as HTMLElement).style[this.key as any] = `${current}${this.suffix}`;

@@ -33,7 +33,7 @@ class Apollo {
       cursor: document.querySelector('.apollo__cursor') as HTMLElement,
       props: [],
       easing: {
-        mode: Apollo.EASING.OUT_CUBIC,
+        mode: Apollo.EASING.CUBIC,
         duration: 1000,
       },
       // targets: [],
