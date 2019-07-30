@@ -103,7 +103,7 @@ class Apollo {
   private frame = (delta : number) : void => {
     this._properties.forEach(property => property.frame(delta));
 
-    this.checkTargets();
+    this.checkTargets(delta);
 
     this.cursorXTimeline.final = this.mousePosition.x;
     this.cursorYTimeline.final = this.mousePosition.y;
@@ -131,7 +131,7 @@ class Apollo {
   
   private render = (delta : number) : void => {
     this._properties.forEach(property => property.render(delta));
-    this._properties.forEach(target => target.render(delta));
+    this._targets.forEach(target => target.render(delta));
 
     if (this.cursorElement !== null) {
       const transform = `translate3d(${this.cursorPosition.x}px, ${this.cursorPosition.y}px, 0px)`;
@@ -143,7 +143,7 @@ class Apollo {
 
   private postRender(delta : number) {
     this._properties.forEach(property => property.postRender(delta));
-    this._properties.forEach(target => target.postRender(delta));
+    this._targets.forEach(target => target.postRender(delta));
 
     this.cursorXTimeline.initial = this.cursorXTimeline.current;
     this.cursorYTimeline.initial = this.cursorYTimeline.current;
@@ -164,7 +164,7 @@ class Apollo {
     this.cursorPositionPrev = this.cursorPosition;
   }
 
-  checkTargets() {
+  checkTargets(delta : number) {
     // Check the out
     if (this.activeMouseTarget !== null && !isInRect(this.mousePosition, this.activeMouseTarget.boundings)) {
       emitEvent('apollo-mouse-leave', { element: this.activeMouseTarget });
@@ -179,7 +179,7 @@ class Apollo {
     let matchedOneCursor = false;
     for (let i = 0; i < this._targets.length; i++) {
       const target = this._targets[i];
-      if (isVisible(target)) {  
+      if (isVisible(target)) {
         // Check the in
         if (isInRect(this.mousePosition, target.boundings) && !matchedOneMouse) {
           if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
@@ -202,6 +202,8 @@ class Apollo {
           matchedOneCursor = true;
         }
       }
+
+      target.frame(delta);
     }
   }
 
