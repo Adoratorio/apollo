@@ -5,9 +5,12 @@ import {
   Timeline,
   PROPERTY_TYPE,
   PROPERTY_SUFFIX,
+  ApolloHTMLElement,
 } from './declarations';
 import Easings from './easing';
 import Property from './property';
+import Target from './target';
+import { createProp, isInRect, isVisible } from './utils';
 
 class Apollo {
   static EASING = Easings;
@@ -18,6 +21,7 @@ class Apollo {
   private mousePosition : Vec2;
   private cursorBounding : ClientRect;
   private _properties : Array<Property>;
+  private _targets : Array<Target>;
   private frameHandler : Function;
   private engine : Aion;
   private _trackMouse : boolean;
@@ -27,8 +31,11 @@ class Apollo {
   private _direction : Vec2 = { x: 0, y: 0 };
   private cursorXTimeline : Timeline;
   private cursorYTimeline : Timeline;
+  public activeMouseTarget : Target | null = null;
+  public activeCursorTarget : Target | null = null;
 
   constructor(options : Partial<ApolloOptions>) {
+    createProp();
     const defaults : ApolloOptions = {
       cursor: document.querySelector('.apollo__cursor') as HTMLElement,
       props: [],
@@ -36,7 +43,7 @@ class Apollo {
         mode: Apollo.EASING.CUBIC,
         duration: 1000,
       },
-      // targets: [],
+      targets: [],
       hiddenUntilFirstInteraction: false,
       initialPosition: { x: 0, y: 0 },
       detectTouch: false,
@@ -78,6 +85,13 @@ class Apollo {
     this.options.props.forEach((prop) => {
       this._properties.push(new Property(prop));
     });
+    // Add all the targets
+    this._targets = [];
+    this.options.targets.forEach((target) => {
+      target.elements.forEach((element, index) => {
+        this._targets.push(new Target(element, target, index));
+      })
+    });
 
     this.frameHandler = (delta : number) => { this.frame(delta); };
     this.engine.add(this.frameHandler, 'apollo-frame');
@@ -88,6 +102,8 @@ class Apollo {
 
   private frame = (delta : number) : void => {
     this._properties.forEach(property => property.frame(delta));
+
+    this.checkTargets();
 
     this.cursorXTimeline.final = this.mousePosition.x;
     this.cursorYTimeline.final = this.mousePosition.y;
@@ -115,6 +131,7 @@ class Apollo {
   
   private render = (delta : number) : void => {
     this._properties.forEach(property => property.render(delta));
+    this._properties.forEach(target => target.render(delta));
 
     if (this.cursorElement !== null) {
       const transform = `translate3d(${this.cursorPosition.x}px, ${this.cursorPosition.y}px, 0px)`;
@@ -126,6 +143,7 @@ class Apollo {
 
   private postRender(delta : number) {
     this._properties.forEach(property => property.postRender(delta));
+    this._properties.forEach(target => target.postRender(delta));
 
     this.cursorXTimeline.initial = this.cursorXTimeline.current;
     this.cursorYTimeline.initial = this.cursorYTimeline.current;
@@ -144,6 +162,54 @@ class Apollo {
     this.velocity.y = Math.abs(this.velocity.y);
 
     this.cursorPositionPrev = this.cursorPosition;
+  }
+
+  checkTargets() {
+    // Check the out
+    if (this.activeMouseTarget !== null && !isInRect(this.mousePosition, this.activeMouseTarget.boundings)) {
+      const init : CustomEventInit = { };
+      init.detail = { element: this.activeMouseTarget };
+      const customEvent = new CustomEvent('apollo-mouse-leave', init);
+      window.dispatchEvent(customEvent);
+      this.activeMouseTarget = null;
+    }
+    if (this.activeCursorTarget !== null && !isInRect(this.cursorPosition, this.activeCursorTarget.boundings)) {
+      const init : CustomEventInit = { };
+      init.detail = { element: this.activeCursorTarget };
+      const customEvent = new CustomEvent('apollo-cursor-leave', init);
+      window.dispatchEvent(customEvent);
+      this.activeCursorTarget = null;
+    }
+
+    let matchedOneMouse = false;
+    let matchedOneCursor = false;
+    for (let i = 0; i < this._targets.length; i++) {
+      const target = this._targets[i];
+      if (isVisible(target)) {  
+        // Check the in
+        if (isInRect(this.mousePosition, target.boundings) && !matchedOneMouse) {
+          if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
+            // A new element is under the cursor
+            this.activeMouseTarget = target;
+            const init : CustomEventInit = { };
+            init.detail = { element: this.activeMouseTarget};
+            const customEvent = new CustomEvent('apollo-mouse-enter', init);
+            window.dispatchEvent(customEvent);
+          }
+          matchedOneMouse = true;
+        }
+        if (isInRect(this.cursorPosition, target.boundings) && !matchedOneCursor) {
+          if (this.activeCursorTarget === null || this.activeCursorTarget.id !== target.id) {
+            this.activeCursorTarget = target;
+            const init : CustomEventInit = { };
+            init.detail = { element: this.activeCursorTarget };
+            const customEvent = new CustomEvent('apollo-cursor-enter', init);
+            window.dispatchEvent(customEvent);
+          }
+          matchedOneCursor = true;
+        }
+      }
+    }
   }
 
   private bindEvents() {

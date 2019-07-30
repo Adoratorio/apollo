@@ -25,6 +25,17 @@ export interface PropertyDescriptior {
   precision? : number,
 }
 
+export interface TargetDescriptor {
+  id : string,
+  elements : Array<ApolloHTMLElement>,
+  offset : Vec2,
+  magnetism : boolean,
+}
+
+export interface ApolloHTMLElement extends HTMLElement {
+  _apolloId : string,
+}
+
 export enum TYPE {
   HTML = 'html',
   CANVAS = 'canvas',
@@ -45,7 +56,7 @@ export interface ApolloOptions {
   cursor : HTMLElement | null,
   props : Array<PropertyDescriptior>,
   easing : Easing,
-  // targets : Array<Target>,
+  targets : Array<TargetDescriptor>,
   hiddenUntilFirstInteraction : boolean,
   initialPosition : Vec2,
   detectTouch : boolean,
