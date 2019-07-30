@@ -102,8 +102,9 @@ class Apollo {
 
   private frame = (delta : number) : void => {
     this._properties.forEach(property => property.frame(delta));
+    this._targets.forEach(target => target.frame(delta));
 
-    this.checkTargets(delta);
+    this.checkTargets();
 
     this.cursorXTimeline.final = this.mousePosition.x;
     this.cursorYTimeline.final = this.mousePosition.y;
@@ -164,7 +165,7 @@ class Apollo {
     this.cursorPositionPrev = this.cursorPosition;
   }
 
-  checkTargets(delta : number) {
+  checkTargets() {
     // Check the out
     if (this.activeMouseTarget !== null && !isInRect(this.mousePosition, this.activeMouseTarget.boundings)) {
       emitEvent('apollo-mouse-leave', { element: this.activeMouseTarget });
@@ -202,8 +203,6 @@ class Apollo {
           matchedOneCursor = true;
         }
       }
-
-      target.frame(delta);
     }
   }
 
