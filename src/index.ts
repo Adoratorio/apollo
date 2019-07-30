@@ -10,7 +10,7 @@ import {
 import Easings from './easing';
 import Property from './property';
 import Target from './target';
-import { createProp, isInRect, isVisible } from './utils';
+import { createProp, isInRect, isVisible, emitEvent } from './utils';
 
 class Apollo {
   static EASING = Easings;
@@ -167,17 +167,11 @@ class Apollo {
   checkTargets() {
     // Check the out
     if (this.activeMouseTarget !== null && !isInRect(this.mousePosition, this.activeMouseTarget.boundings)) {
-      const init : CustomEventInit = { };
-      init.detail = { element: this.activeMouseTarget };
-      const customEvent = new CustomEvent('apollo-mouse-leave', init);
-      window.dispatchEvent(customEvent);
+      emitEvent('apollo-mouse-leave', { element: this.activeMouseTarget });
       this.activeMouseTarget = null;
     }
     if (this.activeCursorTarget !== null && !isInRect(this.cursorPosition, this.activeCursorTarget.boundings)) {
-      const init : CustomEventInit = { };
-      init.detail = { element: this.activeCursorTarget };
-      const customEvent = new CustomEvent('apollo-cursor-leave', init);
-      window.dispatchEvent(customEvent);
+      emitEvent('apollo-cursor-leave', { element: this.activeCursorTarget });
       this.activeCursorTarget = null;
     }
 
@@ -189,22 +183,21 @@ class Apollo {
         // Check the in
         if (isInRect(this.mousePosition, target.boundings) && !matchedOneMouse) {
           if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
-            // A new element is under the cursor
+            if (this.activeMouseTarget !== null) {
+              emitEvent('apollo-mouse-leave', { element: this.activeMouseTarget })
+            }
             this.activeMouseTarget = target;
-            const init : CustomEventInit = { };
-            init.detail = { element: this.activeMouseTarget};
-            const customEvent = new CustomEvent('apollo-mouse-enter', init);
-            window.dispatchEvent(customEvent);
+            emitEvent('apollo-mouse-enter', { element: this.activeMouseTarget });
           }
           matchedOneMouse = true;
         }
         if (isInRect(this.cursorPosition, target.boundings) && !matchedOneCursor) {
           if (this.activeCursorTarget === null || this.activeCursorTarget.id !== target.id) {
+            if(this.activeCursorTarget !== null) {
+              emitEvent('apollo-cursor-leave', { element: this.activeCursorTarget });
+            }
             this.activeCursorTarget = target;
-            const init : CustomEventInit = { };
-            init.detail = { element: this.activeCursorTarget };
-            const customEvent = new CustomEvent('apollo-cursor-enter', init);
-            window.dispatchEvent(customEvent);
+            emitEvent('apollo-cursor-enter', { element: this.activeCursorTarget });
           }
           matchedOneCursor = true;
         }

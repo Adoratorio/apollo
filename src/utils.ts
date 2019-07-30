@@ -35,3 +35,10 @@ export function isVisible(target : Target) {
   if (topLeftElement !== null && target.id === topLeftElement._apolloId) return true;
   if (bottomRightElement !== null && target.id === bottomRightElement._apolloId) return true;
 }
+
+export function emitEvent(id : string, payload : any) {
+  const init : CustomEventInit = { };
+  init.detail = payload;
+  const customEvent = new CustomEvent(id, init);
+  window.dispatchEvent(customEvent);
+}
