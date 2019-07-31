@@ -21,7 +21,7 @@ export function updateTransform(transform : string, key : string, value : number
 
 export function createProp() {
   Object.defineProperty(HTMLElement.prototype, '_apolloId', {
-    value: -1,
+    value: '-1',
     configurable: true,
     enumerable: true,
     writable: true,
@@ -29,11 +29,16 @@ export function createProp() {
 }
 
 export function isVisible(target : Target) {
-  const topLeftElement = document.elementFromPoint(target.boundingRect.left + 1, target.boundingRect.top + 1) as ApolloHTMLElement;
-  const bottomRightElement = document.elementFromPoint(target.boundingRect.right - 1, target.boundingRect.bottom - 1) as ApolloHTMLElement;
-  if (topLeftElement === null && bottomRightElement === null) return false;
-  if (topLeftElement !== null && target.id === topLeftElement._apolloId) return true;
-  if (bottomRightElement !== null && target.id === bottomRightElement._apolloId) return true;
+  const topLeftElements = document.elementsFromPoint(target.boundingRect.left + 1, target.boundingRect.top + 1) as Array<ApolloHTMLElement>;
+  const bottomRightElements = document.elementsFromPoint(target.boundingRect.right - 1, target.boundingRect.bottom - 1) as Array<ApolloHTMLElement>;
+  const topLeftElement = topLeftElements.find(e => e._apolloId !== '-1' && e._apolloId === target.id);
+  const bottomRightElement = bottomRightElements.find(e => e._apolloId !== '-1' && e._apolloId === target.id);
+  if (typeof topLeftElement !== 'undefined' && typeof bottomRightElement !== 'undefined') {
+    if (topLeftElement !== null && target.id === topLeftElement._apolloId) return true;
+    if (bottomRightElement !== null && target.id === bottomRightElement._apolloId) return true;
+  } else {
+    return false;
+  }
 }
 
 export function emitEvent(id : string, payload : any) {
