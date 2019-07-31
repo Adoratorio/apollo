@@ -17,17 +17,18 @@ class Apollo {
   static PROPERTY_SUFFIX = PROPERTY_SUFFIX;
 
   private options : ApolloOptions;
-  private mousePosition : Vec2;
-  private cursorBounding : ClientRect;
   private _properties : Array<Property>;
   private _targets : Array<Target>;
-  private frameHandler : Function;
-  private engine : Aion;
+  private mousePosition : Vec2;
+  private mouseRenderPosition : Vec2;
   private _trackMouse : boolean;
   private cursorPosition : Vec2;
   private cursorPositionPrev : Vec2 = { x: 0, y: 0 };
+  private cursorBounding : ClientRect;
   private _velocity : Vec2 = { x: 0, y: 0 };
   private _direction : Vec2 = { x: 0, y: 0 };
+  private engine : Aion;
+  private frameHandler : Function;
   private cursorXTimeline : Timeline;
   private cursorYTimeline : Timeline;
   public activeMouseTarget : Target | null = null;
@@ -56,6 +57,7 @@ class Apollo {
 
     // Set the initial mouse position
     this.mousePosition = this.options.initialPosition;
+    this.mouseRenderPosition = this.mousePosition;
     this.cursorPosition = this.mousePosition;
     this.cursorBounding = (this.cursorElement as HTMLElement).getBoundingClientRect();
     this.cursorXTimeline = {
@@ -105,8 +107,8 @@ class Apollo {
 
     this.checkTargets();
 
-    this.cursorXTimeline.final = this.mousePosition.x;
-    this.cursorYTimeline.final = this.mousePosition.y;
+    this.cursorXTimeline.final = this.mouseRenderPosition.x;
+    this.cursorYTimeline.final = this.mouseRenderPosition.y;
   
     const deltaT : number = Math.min(Math.max(delta, 0), this.options.easing.duration);
     const time : number = this.options.easing.mode(deltaT / this.options.easing.duration);
@@ -215,19 +217,21 @@ class Apollo {
   }
 
   private mouseMove = (event : MouseEvent) : void => {
-    if (!this._trackMouse) return;
     this.mousePosition = {
       x: event.clientX,
       y: event.clientY,
     };
+    if (!this._trackMouse) return;
+    this.mouseRenderPosition = this.mousePosition;
   }
 
   private touchMove = (event : TouchEvent) : void => {
-    if (!this._trackMouse) return;
     this.mousePosition = {
       x: event.touches[0].clientX,
       y: event.touches[0].clientY,
     };
+    if (!this._trackMouse) return;
+    this.mouseRenderPosition = this.mousePosition;
   }
 
   public getProperty(key : string) : Property | undefined {
@@ -259,7 +263,7 @@ class Apollo {
   }
 
   public set coords(coords : Vec2) {
-    this.mousePosition = coords;
+    this.mouseRenderPosition = coords;
   }
 
   public get velocity() : Vec2 {
