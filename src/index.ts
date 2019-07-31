@@ -5,7 +5,6 @@ import {
   Timeline,
   PROPERTY_TYPE,
   PROPERTY_SUFFIX,
-  ApolloHTMLElement,
 } from './declarations';
 import Easings from './easing';
 import Property from './property';
@@ -168,11 +167,11 @@ class Apollo {
   checkTargets() {
     // Check the out
     if (this.activeMouseTarget !== null && !isInRect(this.mousePosition, this.activeMouseTarget.boundings)) {
-      emitEvent('apollo-mouse-leave', { element: this.activeMouseTarget });
+      emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget });
       this.activeMouseTarget = null;
     }
     if (this.activeCursorTarget !== null && !isInRect(this.cursorPosition, this.activeCursorTarget.boundings)) {
-      emitEvent('apollo-cursor-leave', { element: this.activeCursorTarget });
+      emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
       this.activeCursorTarget = null;
     }
 
@@ -185,20 +184,20 @@ class Apollo {
         if (isInRect(this.mousePosition, target.boundings) && !matchedOneMouse) {
           if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
             if (this.activeMouseTarget !== null) {
-              emitEvent('apollo-mouse-leave', { element: this.activeMouseTarget })
+              emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget })
             }
             this.activeMouseTarget = target;
-            emitEvent('apollo-mouse-enter', { element: this.activeMouseTarget });
+            emitEvent('apollo-mouse-enter', { target: this.activeMouseTarget });
           }
           matchedOneMouse = true;
         }
         if (isInRect(this.cursorPosition, target.boundings) && !matchedOneCursor) {
           if (this.activeCursorTarget === null || this.activeCursorTarget.id !== target.id) {
             if(this.activeCursorTarget !== null) {
-              emitEvent('apollo-cursor-leave', { element: this.activeCursorTarget });
+              emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
             }
             this.activeCursorTarget = target;
-            emitEvent('apollo-cursor-enter', { element: this.activeCursorTarget });
+            emitEvent('apollo-cursor-enter', { target: this.activeCursorTarget });
           }
           matchedOneCursor = true;
         }
@@ -229,6 +228,10 @@ class Apollo {
       x: event.touches[0].clientX,
       y: event.touches[0].clientY,
     };
+  }
+
+  public getProperty(key : string) : Property | undefined {
+    return this._properties.find(p => p.key === key);
   }
 
   public get trackMouse() : boolean {
