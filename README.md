@@ -25,5 +25,5 @@ Medusa accept in the constructor and `option` object with the following possible
 |parameter|type|default|description|
 |:-------|:--:|:-----:|:----------|
 |cursor|`HTMLElement`|`document.querySelector('.apollo__cursor)`|The HTML element reiceving the transforms to follow the mouse|
-|props|Array\<PropertyDescriptor\>|`[]`|An array of Propery Descriptors to define wich props will be animated, a timeline will be created for each prop|
+|props|`Array\<PropertyDescriptor\>`|`[]`|An array of Propery Descriptors to define wich props will be animated, a timeline will be created for each prop|
 |easing|`Easing`|`{ mode: Apollo.EASING.CUBIC, duration: 1000 }`|An easing object used to describe the cursor element aniamtion|
