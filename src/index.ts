@@ -48,8 +48,6 @@ class Apollo {
       initialPosition: { x: 0, y: 0 },
       detectTouch: false,
       emitGlobal: false,
-      onEnter: () => {},
-      onLeave: () => {},
       aion: null,
       renderByPixel: false,
     }

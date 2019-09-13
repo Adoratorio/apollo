@@ -61,8 +61,6 @@ export interface ApolloOptions {
   initialPosition : Vec2,
   detectTouch : boolean,
   emitGlobal : boolean,
-  onEnter : Function,
-  onLeave : Function,
   aion : Aion | null,
   renderByPixel : boolean,
 }
