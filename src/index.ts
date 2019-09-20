@@ -264,6 +264,10 @@ class Apollo {
     this.mouseRenderPosition = coords;
   }
 
+  public get mouse() : Vec2 {
+    return this.mousePosition;
+  }
+
   public get velocity() : Vec2 {
     return this._velocity;
   }
