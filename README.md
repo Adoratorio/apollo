@@ -40,6 +40,15 @@ Targets are the interaction core, having callback and event on hover and leave o
 ```typescript
 apolloInstance.addTargets(targets Array<TargetDescriptor>)
 ```
+Anytime an element in target is hovered or leaved a global event is emitted (if the emitGlobal option is set to true).
+Emitted events are
+|name|when|
+|:---|:---|
+|`apollo-mouse-enter`|When the mouse pointer enter a target|
+|`apollo-cursor-enter`|When the cursor element enter a target|
+|`apollo-mouse-leave`|When the mouse pointer leave a target|
+|`apollo-cursor-leave`|When the cursor element enter a target|
+
 Having `TargetDescriptor` defined as follow
 |parameter|type|descriptor|
 |:--------|:--:|:---------|
