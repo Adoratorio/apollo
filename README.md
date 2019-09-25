@@ -47,10 +47,10 @@ apolloInstance.getProperty(key : string).value = value : any;
 Having the `PropertyDescriptor` defined ad follow
 |parameter|type|descriptor|
 |:--------|:--:|:---------|
-|key|`string`|The key that will be used when rendering the animation, for example `translateX`
-|type|`string`|Determins how the property will be used when rendering cal be `Aplllo.PROPERTY_TYPE.TYPELESS` or `Apollo.PROPERTY_TYPE.STYLE` or `Apollo.PROPERTY_TYPE.TRANSFORM` or `Apollo.PROPERTY_TYPE.ATTRIBUTE`
- |target|`Element`|The DOM element used as target for rendering, not needed if prop is typeless
- |suffix|`string`|The suffix string used to render css props or transform will be applied in the form of `${value}${suffix}`
+|key|`string`|The key that will be used when rendering the animation, for example `translateX`|
+|type|`string`|Determins how the property will be used when rendering cal be `Aplllo.PROPERTY_TYPE.TYPELESS` or `Apollo.PROPERTY_TYPE.STYLE` or `Apollo.PROPERTY_TYPE.TRANSFORM` or `Apollo.PROPERTY_TYPE.ATTRIBUTE`|
+ |target|`Element`|The DOM element used as target for rendering, not needed if prop is typeless|
+ |suffix|`string`|The suffix string used to render css props or transform will be applied in the form of `${value}${suffix}`|
 
 Just remember: if the current target of the prop is the cursor element itself and you are animating the `translateX` or `translateY` transform you need to call `apolloInstance.stopMouseTracking()` and later when you need to start the mouse following again `apolloInstance.startMouseTracking()`.
 #Anyway# this is not an actual animation engine, is used just to update some props arount the cursor in a specific way avoiding the necessity to build a complete animation system. If you need more than this a complex animation system is required maybe with some animation frameworks.
