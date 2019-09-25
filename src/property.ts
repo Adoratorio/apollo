@@ -3,7 +3,7 @@ import {
   PROPERTY_SUFFIX,
   PROPERTY_TYPE,
   Timeline,
-  PropertyDescriptior,
+  PropertyDescriptor,
   Easing,
 } from "./declarations";
 import { updateTransform } from "./utils";
@@ -18,7 +18,7 @@ class Property {
   readonly easing : Easing;
   readonly precision : number;
 
-  constructor(descriptor : PropertyDescriptior) {
+  constructor(descriptor : PropertyDescriptor) {
     this.key = descriptor.key;
     this.type = descriptor.type;
     this.target = descriptor.target;
