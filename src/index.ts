@@ -5,6 +5,8 @@ import {
   Timeline,
   PROPERTY_TYPE,
   PROPERTY_SUFFIX,
+  TargetDescriptor,
+  PropertyDescriptor,
 } from './declarations';
 import Easings from './easing';
 import Property from './property';
@@ -168,10 +170,12 @@ class Apollo {
     // Check the out
     if (this.activeMouseTarget !== null && !isInRect(this.mousePosition, this.activeMouseTarget.boundings)) {
       emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget });
+      this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-leave');
       this.activeMouseTarget = null;
     }
     if (this.activeCursorTarget !== null && !isInRect(this.cursorPosition, this.activeCursorTarget.boundings)) {
       emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
+      this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-leave');
       this.activeCursorTarget = null;
     }
 
@@ -185,9 +189,11 @@ class Apollo {
           if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
             if (this.activeMouseTarget !== null) {
               emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget })
+              this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-leave');
             }
             this.activeMouseTarget = target;
             emitEvent('apollo-mouse-enter', { target: this.activeMouseTarget });
+            this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-enter');
           }
           matchedOneMouse = true;
         }
@@ -195,9 +201,11 @@ class Apollo {
           if (this.activeCursorTarget === null || this.activeCursorTarget.id !== target.id) {
             if(this.activeCursorTarget !== null) {
               emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
+              this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-leave');
             }
             this.activeCursorTarget = target;
             emitEvent('apollo-cursor-enter', { target: this.activeCursorTarget });
+            this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-enter');
           }
           matchedOneCursor = true;
         }
@@ -230,6 +238,38 @@ class Apollo {
     };
     if (!this._trackMouse) return;
     this.mouseRenderPosition = this.mousePosition;
+  }
+
+  public addProperties(props : Array<PropertyDescriptor>) {
+    props.forEach((prop) => {
+      this._properties.push(new Property(prop));
+    })
+  }
+
+  public removeProperty(key : string) {
+    const index = this._properties.findIndex((prop) => prop.key === key);
+    if (index > -1) {
+      delete this._properties[index];
+      this._properties.splice(index, 1);
+    }
+  }
+
+  public addTarget(target : Array<TargetDescriptor>) {
+    target.forEach((target) => {
+      target.elements.forEach((element, index) => {
+        this._targets.push(new Target(element, target, index));
+      });
+    })
+  }
+
+  public removeTarget(id : string) {
+    for (let index = this._targets.length - 1; index >= 0; index--) {
+      const target = this._targets[index];
+      if (target.descriptor.id === id) {
+        delete this._targets[index];
+        this._targets.splice(index, 1);
+      } 
+    }
   }
 
   public getProperty(key : string) : Property | undefined {

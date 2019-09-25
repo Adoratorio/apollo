@@ -15,7 +15,7 @@ export enum PROPERTY_TYPE {
   ATTRIBUTE = 'attribute',
 }
 
-export interface PropertyDescriptior {
+export interface PropertyDescriptor {
   key : string,
   type : PROPERTY_TYPE,
   target? : Element | null,
@@ -29,7 +29,7 @@ export interface TargetDescriptor {
   id : string,
   elements : Array<ApolloHTMLElement>,
   offset : Vec2,
-  magnetism : boolean,
+  callback : Function,
 }
 
 export interface ApolloHTMLElement extends HTMLElement {
@@ -54,7 +54,7 @@ export interface Vec2 {
 
 export interface ApolloOptions {
   cursor : HTMLElement | null,
-  props : Array<PropertyDescriptior>,
+  props : Array<PropertyDescriptor>,
   easing : Easing,
   targets : Array<TargetDescriptor>,
   hiddenUntilFirstInteraction : boolean,
