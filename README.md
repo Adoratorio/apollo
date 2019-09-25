@@ -42,6 +42,7 @@ apolloInstance.addTargets(targets Array<TargetDescriptor>)
 ```
 Anytime an element in target is hovered or leaved a global event is emitted (if the emitGlobal option is set to true).
 Emitted events are
+
 |name|when|
 |:---|:---|
 |`apollo-mouse-enter`|When the mouse pointer enter a target|
