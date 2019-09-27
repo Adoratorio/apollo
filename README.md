@@ -77,6 +77,13 @@ Having the `PropertyDescriptor` defined ad follow
 |easing|`{ mode: Function, duration: number }`|The easing descriptor used to ease between values
 |initial|`number`|The starting value for the property
 |precision|`number`|Number of digits used to round the final rendered value
+
+Each property exposes two additional methods: `play` and `pause`. Usable as follow
+
+```typescript
+apolloInstance.getProperty('prop_key').pause();
+apolloInstance.getProperty('prop_key').play(resumeValue? : number);
+```
  
 *Watch out*: if the current target of the prop is the cursor element itself and you are animating the `translateX` or `translateY` transform you need to call `apolloInstance.stopMouseTracking()` and later when you need to start the mouse following again `apolloInstance.startMouseTracking()`.
 
