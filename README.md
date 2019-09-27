@@ -51,6 +51,7 @@ Emitted events are
 |`apollo-cursor-leave`|When the cursor element enter a target|
 
 Having `TargetDescriptor` defined as follow
+
 |parameter|type|descriptor|
 |:--------|:--:|:---------|
 |id|`string`|The id of the target, used to identify the target
