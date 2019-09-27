@@ -79,7 +79,12 @@ class Property {
     this.timeline.final = value;
   }
 
-  public play() {
+  public play(value : number | undefined) {
+    if (typeof value === 'undefined') value = this.timeline.initial;
+    this.timeline.start = performance.now();
+    this.timeline.initial = value;
+    this.timeline.current = value;
+    this.timeline.final = value;
     this.playing = true;
   }
 
