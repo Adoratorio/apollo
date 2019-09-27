@@ -12,6 +12,7 @@ class Target {
     this.descriptor = descriptor;
     this.id = `${this.descriptor.id}-${id}`;
     this.element._apolloId = this.id;
+    if (typeof this.descriptor.callback !== 'function') this.descriptor.callback = () => {};
     this.calculateBoundings();
   }
   

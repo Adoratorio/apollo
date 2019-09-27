@@ -10,6 +10,7 @@ import { updateTransform } from "./utils";
 
 class Property {
   private _value : number;
+  private playing : boolean;
   readonly key : string;
   readonly type : PROPERTY_TYPE ;
   readonly target : Element | null | undefined;
@@ -19,6 +20,7 @@ class Property {
   readonly precision : number;
 
   constructor(descriptor : PropertyDescriptor) {
+    this.playing = true;
     this.key = descriptor.key;
     this.type = descriptor.type;
     this.target = descriptor.target;
@@ -44,6 +46,7 @@ class Property {
   }
 
   render(delta : number) {
+    if (!this.playing) return;
     if (this.target !== null && typeof this.target !== 'undefined') {
       const current = parseFloat(this.timeline.current.toFixed(this.precision));
       if (this.type === Apollo.PROPERTY_TYPE.TRANSFORM) {
@@ -74,6 +77,14 @@ class Property {
     this.timeline.start = performance.now();
     this.timeline.initial = this._value;
     this.timeline.final = value;
+  }
+
+  public play() {
+    this.playing = true;
+  }
+
+  public pause() {
+    this.playing = false;
   }
 }
 
