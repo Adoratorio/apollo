@@ -266,7 +266,7 @@ class Apollo {
       if (target.descriptor.id === id) {
         delete this._targets[index];
         this._targets.splice(index, 1);
-      } 
+      }
     }
   }
 
