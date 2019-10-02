@@ -254,12 +254,10 @@ class Apollo {
     }
   }
 
-  public addTarget(target : Array<TargetDescriptor>) {
-    target.forEach((target) => {
-      target.elements.forEach((element, index) => {
-        this._targets.push(new Target(element, target, index));
-      });
-    })
+  public addTarget(target : TargetDescriptor) {
+    target.elements.forEach((element, index) => {
+      this._targets.push(new Target(element, target, index));
+    });
   }
 
   public removeTarget(id : string) {
