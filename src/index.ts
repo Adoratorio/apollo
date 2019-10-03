@@ -60,6 +60,10 @@ class Apollo {
     }
     this.options = {...defaults, ...options};
 
+    if (typeof this.options.callbacks.frame === 'undefined') this.options.callbacks.frame = () => {};
+    if (typeof this.options.callbacks.render === 'undefined') this.options.callbacks.render = () => {};
+    if (typeof this.options.callbacks.postRender === 'undefined') this.options.callbacks.postRender = () => {};
+
     // Set the initial mouse position
     this.mousePosition = this.options.initialPosition;
     this.mouseRenderPosition = this.mousePosition;
