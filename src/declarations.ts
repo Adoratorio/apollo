@@ -63,6 +63,11 @@ export interface ApolloOptions {
   emitGlobal : boolean,
   aion : Aion | null,
   renderByPixel : boolean,
+  callbacks : {
+    frame : Function,
+    render : Function,
+    postRender : Function,
+  }
 }
 
 export interface Timeline {
