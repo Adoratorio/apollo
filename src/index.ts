@@ -52,6 +52,11 @@ class Apollo {
       emitGlobal: false,
       aion: null,
       renderByPixel: false,
+      callbacks: {
+        frame: () => {},
+        render: () => {},
+        postRender: () => {},
+      },
     }
     this.options = {...defaults, ...options};
 
@@ -102,6 +107,7 @@ class Apollo {
   }
 
   private frame = (delta : number) : void => {
+    this.options.callbacks.frame(this.coords, this.mouse);
     this._properties.forEach(property => property.frame(delta));
     this._targets.forEach(target => target.frame(delta));
 
@@ -132,6 +138,7 @@ class Apollo {
   }
   
   private render = (delta : number) : void => {
+    this.options.callbacks.render(this.coords, this.mouse);
     this._properties.forEach(property => property.render(delta));
     this._targets.forEach(target => target.render(delta));
 
@@ -162,6 +169,8 @@ class Apollo {
 
     this.velocity.x = Math.abs(this.velocity.x);
     this.velocity.y = Math.abs(this.velocity.y);
+
+    this.options.callbacks.postRender(this.coords, this.mouse);
 
     this.cursorPositionPrev = this.cursorPosition;
   }
