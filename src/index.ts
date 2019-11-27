@@ -57,6 +57,7 @@ class Apollo {
         render: () => {},
         postRender: () => {},
       },
+      render: true,
     }
     this.options = {...defaults, ...options};
 
@@ -142,6 +143,7 @@ class Apollo {
   }
   
   private render = (delta : number) : void => {
+    if (!this.options.render) return;
     this.options.callbacks.render(this.coords, this.mouse);
     this._properties.forEach(property => property.render(delta));
     this._targets.forEach(target => target.render(delta));
