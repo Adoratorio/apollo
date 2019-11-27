@@ -68,6 +68,7 @@ export interface ApolloOptions {
     render : Function,
     postRender : Function,
   }
+  render : boolean,
 }
 
 export interface Timeline {
