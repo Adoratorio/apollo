@@ -38,7 +38,7 @@ Medusa accept in the constructor and `option` object with the following possible
 ## APIs
 Targets are the interaction core, having callback and event on hover and leave of the element, you can define targets passing target descriptors to the constructor or using the dedicated method
 ```typescript
-apolloInstance.addTargets(targets Array<TargetDescriptor>)
+apolloInstance.addTarget(targets Array<TargetDescriptor>)
 ```
 Anytime an element in target is hovered or leaved a global event is emitted (if the emitGlobal option is set to true).
 Emitted events are
