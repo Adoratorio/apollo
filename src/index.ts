@@ -7,6 +7,7 @@ import {
   PROPERTY_SUFFIX,
   TargetDescriptor,
   PropertyDescriptor,
+  ApolloHTMLElement,
 } from './declarations';
 import Easings from './easing';
 import Property from './property';
@@ -271,6 +272,7 @@ class Apollo {
 
   public addTarget(target : TargetDescriptor) {
     target.elements.forEach((element, index) => {
+      if (typeof element._apolloId !== 'undefined') return;
       this._targets.push(new Target(element, target, index));
     });
   }
@@ -279,6 +281,16 @@ class Apollo {
     for (let index = this._targets.length - 1; index >= 0; index--) {
       const target = this._targets[index];
       if (target.descriptor.id === id) {
+        delete this._targets[index];
+        this._targets.splice(index, 1);
+      }
+    }
+  }
+  
+  public pullFromTarget(element : ApolloHTMLElement) {
+    for (let index = this._targets.length - 1; index >= 0; index--) {
+      const target = this._targets[index];
+      if (target.id === element._apolloId) {
         delete this._targets[index];
         this._targets.splice(index, 1);
       }
