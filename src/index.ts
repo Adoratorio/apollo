@@ -272,7 +272,7 @@ class Apollo {
 
   public addTarget(target : TargetDescriptor) {
     target.elements.forEach((element, index) => {
-      if (typeof element._apolloId !== 'undefined') return;
+      if (element._apolloId !== '-1') return;
       this._targets.push(new Target(element, target, index));
     });
   }
