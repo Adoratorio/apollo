@@ -11,6 +11,7 @@ import { updateTransform } from "./utils";
 class Property {
   private _value : number;
   private playing : boolean;
+  readonly id : string;
   readonly key : string;
   readonly type : PROPERTY_TYPE ;
   readonly target : Element | null | undefined;
@@ -21,6 +22,7 @@ class Property {
 
   constructor(descriptor : PropertyDescriptor) {
     this.playing = true;
+    this.id = descriptor.id;
     this.key = descriptor.key;
     this.type = descriptor.type;
     this.target = descriptor.target;

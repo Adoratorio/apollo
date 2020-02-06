@@ -262,8 +262,8 @@ class Apollo {
     })
   }
 
-  public removeProperty(key : string) {
-    const index = this._properties.findIndex((prop) => prop.key === key);
+  public removeProperty(id : string) {
+    const index = this._properties.findIndex((prop) => prop.id === id);
     if (index > -1) {
       delete this._properties[index];
       this._properties.splice(index, 1);
@@ -297,8 +297,8 @@ class Apollo {
     }
   }
 
-  public getProperty(key : string) : Property | undefined {
-    return this._properties.find(p => p.key === key);
+  public getProperty(id : string) : Property | undefined {
+    return this._properties.find(p => p.id === id);
   }
 
   public get trackMouse() : boolean {

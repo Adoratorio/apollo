@@ -65,12 +65,13 @@ apolloInstance.addProperties(props : Array<PropertyDescriptor>)
 ```
 Then when you need to update the value and make apollo to ease from the actual value to the newly setted one simply get the property and change its value like so
 ```typescript
-apolloInstance.getProperty(key : string).value = value : any;
+apolloInstance.getProperty(id : string).value = value : any;
 ```
 Having the `PropertyDescriptor` defined ad follow
 
 |parameter|type|descriptor|
 |:--------|:--:|:---------|
+|id|`string`|The id that will be used to identify the property when accessing it|
 |key|`string`|The key that will be used when rendering the animation, for example `translateX`|
 |type|`string`|Determins how the property will be used when rendering can be `Aplllo.PROPERTY_TYPE.TYPELESS` or `Apollo.PROPERTY_TYPE.STYLE` or `Apollo.PROPERTY_TYPE.TRANSFORM` or `Apollo.PROPERTY_TYPE.ATTRIBUTE`|
 |target|`Element`|The DOM element used as target for rendering, not needed if prop is typeless|
@@ -82,10 +83,10 @@ Having the `PropertyDescriptor` defined ad follow
 Each property exposes two additional methods: `play` and `pause`. Usable as follow
 
 ```typescript
-apolloInstance.getProperty('prop_key').pause();
-apolloInstance.getProperty('prop_key').play(resumeValue? : number);
+apolloInstance.getProperty('prop_id').pause();
+apolloInstance.getProperty('prop_id').play(resumeValue? : number);
 ```
  
 *Watch out*: if the current target of the prop is the cursor element itself and you are animating the `translateX` or `translateY` transform you need to call `apolloInstance.stopMouseTracking()` and later when you need to start the mouse following again `apolloInstance.startMouseTracking()`.
 
-__Anyway__ this is not an actual animation engine, is used just to update some props arount the cursor in a specific way avoiding the necessity to build a complete animation system. If you need more than this a complex animation system is required maybe with some animation frameworks.
+__Anyway__ this is not an actual animation engine, is used just to update some props around the cursor in a specific way avoiding the necessity to build a complete animation system. If you need more than this a complex animation system is required maybe with some animation frameworks.

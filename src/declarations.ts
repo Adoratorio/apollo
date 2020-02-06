@@ -16,6 +16,7 @@ export enum PROPERTY_TYPE {
 }
 
 export interface PropertyDescriptor {
+  id : string,
   key : string,
   type : PROPERTY_TYPE,
   target? : Element | null,
