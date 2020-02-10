@@ -58,6 +58,7 @@ Having `TargetDescriptor` defined as follow
 |elements|`Array<HTMLElement>`|The HTMLElements array used to detect hover and leave
 |offset|`{ x: number, y: number }`|The offset that will trigger hover and leave on elements
 |callback|`Function`|Callback function for hover and leave
+|checkVisibility|`Boolean`|If you need to test the element visibility before triggering hover
 
 You can animate some css, attributes or js values of the DOM cursor element, or any other DOM element actually, by passing in a property descriptor in the `props` array parameter in constructor or adding a prop with the dedicated method.
 ```typescript
