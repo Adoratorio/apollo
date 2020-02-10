@@ -29,6 +29,7 @@ export function createProp() {
 }
 
 export function isVisible(target : Target) {
+  if (!target.descriptor.checkVisibility) return true;
   const topLeftElements = document.elementsFromPoint(target.boundingRect.left + 1, target.boundingRect.top + 1) as Array<ApolloHTMLElement>;
   const bottomRightElements = document.elementsFromPoint(target.boundingRect.right - 1, target.boundingRect.bottom - 1) as Array<ApolloHTMLElement>;
   const topMostLeftElement = topLeftElements[0];

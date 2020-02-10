@@ -31,6 +31,7 @@ export interface TargetDescriptor {
   elements : Array<ApolloHTMLElement>,
   offset : Vec2,
   callback : Function,
+  checkVisibility : boolean,
 }
 
 export interface ApolloHTMLElement extends HTMLElement {
