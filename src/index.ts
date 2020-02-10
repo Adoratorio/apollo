@@ -291,6 +291,7 @@ class Apollo {
     for (let index = this._targets.length - 1; index >= 0; index--) {
       const target = this._targets[index];
       if (target.id === element._apolloId) {
+        element._apolloId = '-1';
         delete this._targets[index];
         this._targets.splice(index, 1);
       }
