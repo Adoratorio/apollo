@@ -31,13 +31,38 @@ export function createProp() {
 export function isVisible(target : Target) {
   const topLeftElements = document.elementsFromPoint(target.boundingRect.left + 1, target.boundingRect.top + 1) as Array<ApolloHTMLElement>;
   const bottomRightElements = document.elementsFromPoint(target.boundingRect.right - 1, target.boundingRect.bottom - 1) as Array<ApolloHTMLElement>;
-  // const topLeftElement = topLeftElements.find(e => e._apolloId !== '-1' && e._apolloId === target.id);
-  // const bottomRightElement = bottomRightElements.find(e => e._apolloId !== '-1' && e._apolloId === target.id);
-  const topLeftElement = topLeftElements[0];
-  const bottomRightElement = bottomRightElements[0];
-  if (typeof topLeftElement !== 'undefined' && typeof bottomRightElement !== 'undefined') {
-    if (topLeftElement !== null && target.id === topLeftElement._apolloId) return true;
-    if (bottomRightElement !== null && target.id === bottomRightElement._apolloId) return true;
+  const topMostLeftElement = topLeftElements[0];
+  const bottomMostRightElement = bottomRightElements[0];
+
+  if (typeof topMostLeftElement !== 'undefined' && typeof bottomMostRightElement !== 'undefined') {
+    if (topMostLeftElement._apolloId === target.id) return true;
+    if (bottomMostRightElement._apolloId === target.id) return true;
+
+    let topMostLeftElementParent = topMostLeftElement.parentNode as ApolloHTMLElement;
+    let topLeftElementIsValid = false;
+    while(
+      topMostLeftElementParent
+      && topMostLeftElementParent.nodeName.toLocaleLowerCase() !== 'body'
+      && !topLeftElementIsValid
+    ) {
+      if (topMostLeftElementParent._apolloId !== '-1' && topMostLeftElementParent._apolloId === target.id) {
+        topLeftElementIsValid = true;
+      }
+      topMostLeftElementParent = topMostLeftElementParent.parentNode as ApolloHTMLElement;
+    }
+    let bottomMostRightElementParent = bottomMostRightElement.parentNode as ApolloHTMLElement;
+    let bottomRightElementIsValid = false;
+    while(
+      bottomMostRightElementParent
+      && bottomMostRightElementParent.nodeName.toLocaleLowerCase() !== 'body'
+      && !bottomRightElementIsValid
+    ) {
+      if (bottomMostRightElementParent._apolloId !== '-1' && bottomMostRightElementParent._apolloId === target.id) {
+        bottomRightElementIsValid = true;
+      }
+      bottomMostRightElementParent = bottomMostRightElementParent.parentNode as ApolloHTMLElement;
+    }
+    return topLeftElementIsValid || bottomRightElementIsValid;
   } else {
     return false;
   }
