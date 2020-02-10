@@ -31,8 +31,10 @@ export function createProp() {
 export function isVisible(target : Target) {
   const topLeftElements = document.elementsFromPoint(target.boundingRect.left + 1, target.boundingRect.top + 1) as Array<ApolloHTMLElement>;
   const bottomRightElements = document.elementsFromPoint(target.boundingRect.right - 1, target.boundingRect.bottom - 1) as Array<ApolloHTMLElement>;
-  const topLeftElement = topLeftElements.find(e => e._apolloId !== '-1' && e._apolloId === target.id);
-  const bottomRightElement = bottomRightElements.find(e => e._apolloId !== '-1' && e._apolloId === target.id);
+  // const topLeftElement = topLeftElements.find(e => e._apolloId !== '-1' && e._apolloId === target.id);
+  // const bottomRightElement = bottomRightElements.find(e => e._apolloId !== '-1' && e._apolloId === target.id);
+  const topLeftElement = topLeftElements[0];
+  const bottomRightElement = bottomRightElements[0];
   if (typeof topLeftElement !== 'undefined' && typeof bottomRightElement !== 'undefined') {
     if (topLeftElement !== null && target.id === topLeftElement._apolloId) return true;
     if (bottomRightElement !== null && target.id === bottomRightElement._apolloId) return true;
