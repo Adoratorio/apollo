@@ -170,12 +170,12 @@ class Apollo {
     };
 
     this._direction = {
-      x: this.velocity.x > 0 ? 1 : -1,
-      y: this.velocity.y > 0 ? 1 : -1,
+      x: this._velocity.x > 0 ? 1 : -1,
+      y: this._velocity.y > 0 ? 1 : -1,
     };
 
-    this.velocity.x = Math.abs(this.velocity.x);
-    this.velocity.y = Math.abs(this.velocity.y);
+    this.velocity.x = Math.abs(this._velocity.x);
+    this.velocity.y = Math.abs(this._velocity.y);
 
     this.options.callbacks.postRender(this.coords, this.mouse);
 
