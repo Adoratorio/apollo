@@ -150,7 +150,7 @@ class Apollo {
     this._targets.forEach(target => target.render(delta));
 
     if (this.cursorElement !== null) {
-      const transform = `translate3d(${this.cursorPosition.x}px, ${this.cursorPosition.y}px, 0px)`;
+      const transform = `translateX(${this.cursorPosition.x}px) translateY(${this.cursorPosition.y}px) translateZ(0px)`;
       (this.cursorElement as HTMLElement).style.transform = transform;
     }
 
