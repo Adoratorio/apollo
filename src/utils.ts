@@ -33,7 +33,7 @@ export function isVisible(target : Target) {
   const topMostLeftElement = document.elementFromPoint(target.boundingRect.left + 1, target.boundingRect.top + 1) as ApolloHTMLElement;
   const bottomMostRightElement = document.elementFromPoint(target.boundingRect.right - 1, target.boundingRect.bottom - 1) as ApolloHTMLElement;
 
-  if (typeof topMostLeftElement !== null && typeof bottomMostRightElement !== null) {
+  if (topMostLeftElement !== null && bottomMostRightElement !== null) {
     if (topMostLeftElement._apolloId === target.id) return true;
     if (bottomMostRightElement._apolloId === target.id) return true;
 
