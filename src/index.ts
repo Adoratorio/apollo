@@ -330,6 +330,13 @@ class Apollo {
     this.mouseRenderPosition = coords;
   }
 
+  public get normalizedCoords() : Vec2 {
+    return {
+      x: ((this.cursorPosition.x / window.innerWidth) * 2) - 1,
+      y: ((this.cursorPosition.y / window.innerHeight) * 2) - 1,
+    }
+  }
+
   public get mouse() : Vec2 {
     return this.mousePosition;
   }
