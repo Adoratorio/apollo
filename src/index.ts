@@ -341,6 +341,13 @@ class Apollo {
     return this.mousePosition;
   }
 
+  public get normalizedMouse() : Vec2 {
+    return {
+      x: ((this.mousePosition.x / window.innerWidth) * 2) - 1,
+      y: ((this.mousePosition.y / window.innerHeight) * 2) - 1,
+    }
+  }
+
   public get velocity() : Vec2 {
     return this._velocity;
   }
