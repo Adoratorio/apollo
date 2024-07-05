@@ -3,68 +3,48 @@ import {
   ApolloOptions,
   Vec2,
   Timeline,
-  PROPERTY_TYPE,
-  PROPERTY_SUFFIX,
-  TargetDescriptor,
-  PropertyDescriptor,
-  ApolloHTMLElement,
+  ApolloPlugin,
 } from './declarations';
 import Easings from './easing';
-import Property from './property';
-import Target from './target';
-import { createProp, isInRect, isVisible, emitEvent } from './utils';
+import { createProp } from './utils';
 
 class Apollo {
   static EASING = Easings;
-  static PROPERTY_TYPE = PROPERTY_TYPE;
-  static PROPERTY_SUFFIX = PROPERTY_SUFFIX;
 
   private options : ApolloOptions;
-  private _properties : Array<Property>;
-  private _targets : Array<Target>;
   private mousePosition : Vec2;
   private mouseRenderPosition : Vec2;
   private _trackMouse : boolean;
   private cursorPosition : Vec2;
   private cursorPositionPrev : Vec2 = { x: 0, y: 0 };
-  private cursorBounding : ClientRect;
+  private cursorBounding : DOMRect;
   private _velocity : Vec2 = { x: 0, y: 0 };
   private _direction : Vec2 = { x: 0, y: 0 };
   private engine : Aion;
   private frameHandler : Function;
   private cursorXTimeline : Timeline;
   private cursorYTimeline : Timeline;
-  public activeMouseTarget : Target | null = null;
-  public activeCursorTarget : Target | null = null;
+  private aionId : string = `apollo-frame-${performance.now()}`;
+  private plugins : Array<ApolloPlugin> = [];
+  private internalId : number = 0;
 
   constructor(options : Partial<ApolloOptions>) {
     createProp();
     const defaults : ApolloOptions = {
       cursor: document.querySelector('.apollo__cursor') as HTMLElement,
-      props: [],
       easing: {
         mode: Apollo.EASING.CUBIC,
         duration: 1000,
       },
-      targets: [],
       hiddenUntilFirstInteraction: false,
       initialPosition: { x: 0, y: 0 },
       detectTouch: false,
       emitGlobal: false,
       aion: null,
       renderByPixel: false,
-      callbacks: {
-        frame: () => {},
-        render: () => {},
-        postRender: () => {},
-      },
       render: true,
     }
     this.options = {...defaults, ...options};
-
-    if (typeof this.options.callbacks.frame === 'undefined') this.options.callbacks.frame = () => {};
-    if (typeof this.options.callbacks.render === 'undefined') this.options.callbacks.render = () => {};
-    if (typeof this.options.callbacks.postRender === 'undefined') this.options.callbacks.postRender = () => {};
 
     // Set the initial mouse position
     this.mousePosition = this.options.initialPosition;
@@ -85,6 +65,7 @@ class Apollo {
       current: this.cursorPosition.y,
       final: this.cursorPosition.y,
     };
+
     // Create or set the engine
     if (this.options.aion !== null) {
       this.engine = this.options.aion;
@@ -92,32 +73,16 @@ class Apollo {
       this.engine = new Aion();
       this.engine.start();
     }
-    // For each prop descriptor start the property
-    this._properties = [];
-    this.options.props.forEach((prop) => {
-      this._properties.push(new Property(prop));
-    });
-    // Add all the targets
-    this._targets = [];
-    this.options.targets.forEach((target) => {
-      target.elements.forEach((element, index) => {
-        this._targets.push(new Target(element, target, index));
-      })
-    });
 
     this.frameHandler = (delta : number) => { this.frame(delta); };
-    this.engine.add(this.frameHandler, 'apollo-frame');
+    this.engine.add(this.frameHandler, this.aionId);
     this.bindEvents();
 
     this._trackMouse = true;
   }
 
   private frame = (delta : number) : void => {
-    this.options.callbacks.frame(this.coords, this.mouse);
-    this._properties.forEach(property => property.frame(delta));
-    this._targets.forEach(target => target.frame(delta));
-
-    this.checkTargets();
+    this.plugins.forEach((plugin) => plugin.preFrame && plugin.preFrame(this, delta));
 
     this.cursorXTimeline.final = this.mouseRenderPosition.x;
     this.cursorYTimeline.final = this.mouseRenderPosition.y;
@@ -139,15 +104,15 @@ class Apollo {
     };
 
     this.cursorPosition = this.options.renderByPixel ? roundedPosition : position;
+
+    this.plugins.forEach((plugin) => plugin.frame && plugin.frame(this, delta));
     
     this.render(delta);
   }
   
   private render = (delta : number) : void => {
     if (!this.options.render) return;
-    this.options.callbacks.render(this.coords, this.mouse);
-    this._properties.forEach(property => property.render(delta));
-    this._targets.forEach(target => target.render(delta));
+    this.plugins.forEach((plugin) => plugin.beforeRender && plugin.beforeRender(this, delta));
 
     if (this.cursorElement !== null) {
       const transform = `translateX(${this.cursorPosition.x}px) translateY(${this.cursorPosition.y}px) translateZ(0px)`;
@@ -155,12 +120,11 @@ class Apollo {
     }
 
     this.postRender(delta);
+
+    this.plugins.forEach((plugin) => plugin.afterRender && plugin.afterRender(this, delta));
   }
 
   private postRender(delta : number) {
-    this._properties.forEach(property => property.postRender(delta));
-    this._targets.forEach(target => target.postRender(delta));
-
     this.cursorXTimeline.initial = this.cursorXTimeline.current;
     this.cursorYTimeline.initial = this.cursorYTimeline.current;
 
@@ -177,56 +141,7 @@ class Apollo {
     this.velocity.x = Math.abs(this._velocity.x);
     this.velocity.y = Math.abs(this._velocity.y);
 
-    this.options.callbacks.postRender(this.coords, this.mouse);
-
     this.cursorPositionPrev = this.cursorPosition;
-  }
-
-  checkTargets() {
-    // Check the out
-    if (this.activeMouseTarget !== null && !isInRect(this.mousePosition, this.activeMouseTarget.boundings)) {
-      emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget });
-      this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-leave');
-      this.activeMouseTarget = null;
-    }
-    if (this.activeCursorTarget !== null && !isInRect(this.cursorPosition, this.activeCursorTarget.boundings)) {
-      emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
-      this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-leave');
-      this.activeCursorTarget = null;
-    }
-
-    let matchedOneMouse = false;
-    let matchedOneCursor = false;
-    for (let i = 0; i < this._targets.length; i++) {
-      const target = this._targets[i];
-      if (isVisible(target)) {
-        // Check the in
-        if (isInRect(this.mousePosition, target.boundings) && !matchedOneMouse) {
-          if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
-            if (this.activeMouseTarget !== null) {
-              emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget })
-              this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-leave');
-            }
-            this.activeMouseTarget = target;
-            emitEvent('apollo-mouse-enter', { target: this.activeMouseTarget });
-            this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-enter');
-          }
-          matchedOneMouse = true;
-        }
-        if (isInRect(this.cursorPosition, target.boundings) && !matchedOneCursor) {
-          if (this.activeCursorTarget === null || this.activeCursorTarget.id !== target.id) {
-            if(this.activeCursorTarget !== null) {
-              emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
-              this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-leave');
-            }
-            this.activeCursorTarget = target;
-            emitEvent('apollo-cursor-enter', { target: this.activeCursorTarget });
-            this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-enter');
-          }
-          matchedOneCursor = true;
-        }
-      }
-    }
   }
 
   private bindEvents() {
@@ -256,50 +171,44 @@ class Apollo {
     this.mouseRenderPosition = this.mousePosition;
   }
 
-  public addProperties(props : Array<PropertyDescriptor>) {
-    props.forEach((prop) => {
-      this._properties.push(new Property(prop));
-    })
+  private register (plugin : ApolloPlugin, id : string) {
+    if (typeof plugin.register === 'function') plugin.register(this);
+    plugin.id = id;
+    this.plugins.push(plugin);
   }
 
-  public removeProperty(id : string) {
-    const index = this._properties.findIndex((prop) => prop.id === id);
-    if (index > -1) {
-      delete this._properties[index];
-      this._properties.splice(index, 1);
+  public registerPlugin(plugin : ApolloPlugin, id? : string) : string {
+    let i = null;
+    if (typeof id === 'undefined') {
+      i = `hades-plugin-${this.internalId}`;
+      this.internalId += 1;
+    } else {
+      i = id;
     }
+    this.register(plugin, i);
+    return i;
   }
 
-  public addTarget(target : TargetDescriptor) {
-    target.elements.forEach((element, index) => {
-      if (element._apolloId !== '-1') return;
-      this._targets.push(new Target(element, target, index));
+  public unregisterPlugin(id : string) : boolean {
+    const foundIndex = this.plugins.findIndex((p) => p.id === id);
+    if (foundIndex === -1) return false;
+    const found = this.plugins[foundIndex];
+    if (typeof found?.destroy === 'function') found.destroy();
+    this.plugins.splice(foundIndex, 1);
+    return true;
+  }
+
+  public registerPlugins(plugins : Array<ApolloPlugin>, ids : Array<string>) : Array<string> {
+    const is : Array<string> = [];
+    plugins.forEach((plugin, index) => {
+      is.push(this.registerPlugin(plugin, ids[index]));
     });
+
+    return is;
   }
 
-  public removeTarget(id : string) {
-    for (let index = this._targets.length - 1; index >= 0; index--) {
-      const target = this._targets[index];
-      if (target.descriptor.id === id) {
-        delete this._targets[index];
-        this._targets.splice(index, 1);
-      }
-    }
-  }
-  
-  public pullFromTarget(element : ApolloHTMLElement) {
-    for (let index = this._targets.length - 1; index >= 0; index--) {
-      const target = this._targets[index];
-      if (target.id === element._apolloId) {
-        element._apolloId = '-1';
-        delete this._targets[index];
-        this._targets.splice(index, 1);
-      }
-    }
-  }
-
-  public getProperty(id : string) : Property | undefined {
-    return this._properties.find(p => p.id === id);
+  public getPlugin(name : string) : ApolloPlugin | undefined {
+    return this.plugins.find(plugin => plugin.name === name);
   }
 
   public get trackMouse() : boolean {
@@ -354,10 +263,6 @@ class Apollo {
 
   public get direction() : Vec2 {
     return this._direction;
-  }
-
-  public get properties() : Array<Property> {
-    return this._properties;
   }
 }
 

@@ -1,11 +1,11 @@
 import { TargetDescriptor, ApolloHTMLElement } from "./declarations";
 
-class Target {
+class SingleTarget {
   element : ApolloHTMLElement;
   descriptor : TargetDescriptor;
   id : string;
-  boundingRect : ClientRect = {} as unknown as ClientRect;
-  boundings : ClientRect = {} as unknown as ClientRect;
+  boundingRect : DOMRect = {} as unknown as DOMRect;
+  boundings : Partial<DOMRect> = {} as unknown as DOMRect;
 
   constructor(element : ApolloHTMLElement, descriptor : TargetDescriptor, id : number) {
     this.element = element;
@@ -41,4 +41,4 @@ class Target {
   }
 }
 
-export default Target;
+export default SingleTarget;

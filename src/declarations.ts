@@ -1,49 +1,5 @@
 import Aion from '@adoratorio/aion';
 
-export enum PROPERTY_SUFFIX {
-  NO_SUFFIX = '',
-  PIXEL = 'px',
-  PERCENTAGE = '%',
-  DEG = 'deg',
-  SECONDS = 's',
-}
-
-export enum PROPERTY_TYPE {
-  TYPELESS = 'typeless',
-  STYLE = 'style',
-  TRANSFORM = 'transform',
-  ATTRIBUTE = 'attribute',
-}
-
-export interface PropertyDescriptor {
-  id : string,
-  key : string,
-  type : PROPERTY_TYPE,
-  target? : Element | null,
-  suffix : PROPERTY_SUFFIX,
-  easing : Easing,
-  initial : number,
-  precision? : number,
-}
-
-export interface TargetDescriptor {
-  id : string,
-  elements : Array<ApolloHTMLElement>,
-  offset : Vec2,
-  callback : Function,
-  checkVisibility : boolean,
-}
-
-export interface ApolloHTMLElement extends HTMLElement {
-  _apolloId : string,
-}
-
-export enum TYPE {
-  HTML = 'html',
-  CANVAS = 'canvas',
-  SVG = 'svg',
-}
-
 export interface Easing {
   mode : Function,
   duration : number,
@@ -56,20 +12,13 @@ export interface Vec2 {
 
 export interface ApolloOptions {
   cursor : HTMLElement | null,
-  props : Array<PropertyDescriptor>,
   easing : Easing,
-  targets : Array<TargetDescriptor>,
   hiddenUntilFirstInteraction : boolean,
   initialPosition : Vec2,
   detectTouch : boolean,
   emitGlobal : boolean,
   aion : Aion | null,
   renderByPixel : boolean,
-  callbacks : {
-    frame : Function,
-    render : Function,
-    postRender : Function,
-  }
   render : boolean,
 }
 
@@ -79,4 +28,15 @@ export interface Timeline {
   initial: number,
   current: number,
   final: number,
+}
+
+export interface ApolloPlugin {
+  id? : string,              // Plugin id assigned during registration
+  name : string,             // Human readable name for the plugin
+  register? : Function       // Called when the plugin is registered
+  destroy? : Function        // Called when a plugin is unregistered
+  preFrame? : Function       // Called at the start of the frame before apollo code
+  frame? : Function          // Called each aion frame at the end of apollo code
+  beforeRender? : Function   // Called before applying rendering to cursror
+  afterRender? : Function    // Called after applying rendering to cursor
 }
