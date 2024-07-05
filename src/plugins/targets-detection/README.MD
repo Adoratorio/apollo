@@ -1,0 +1,2 @@
+# Targets
+`Targets` is a plugin for `Apollo` that will handle mouse over and leave events on target with optionals extended boundings checking each frame if the cursor or the mouse are over a target without relying on the browser events.
