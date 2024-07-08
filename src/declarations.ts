@@ -11,15 +11,11 @@ export interface Vec2 {
 }
 
 export interface ApolloOptions {
-  cursor : HTMLElement | null,
   easing : Easing,
-  hiddenUntilFirstInteraction : boolean,
   initialPosition : Vec2,
   detectTouch : boolean,
   emitGlobal : boolean,
   aion : Aion | null,
-  renderByPixel : boolean,
-  render : boolean,
 }
 
 export interface Timeline {

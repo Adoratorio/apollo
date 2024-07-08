@@ -17,7 +17,6 @@ class Apollo {
   private _trackMouse : boolean;
   private cursorPosition : Vec2;
   private cursorPositionPrev : Vec2 = { x: 0, y: 0 };
-  private cursorBounding : DOMRect;
   private _velocity : Vec2 = { x: 0, y: 0 };
   private _direction : Vec2 = { x: 0, y: 0 };
   private engine : Aion;
@@ -29,20 +28,17 @@ class Apollo {
   private internalId : number = 0;
 
   constructor(options : Partial<ApolloOptions>) {
-    createProp();
+    createProp(); // Will add '_apolloId' to HTMLElement prototype
+
     const defaults : ApolloOptions = {
-      cursor: document.querySelector('.apollo__cursor') as HTMLElement,
       easing: {
         mode: Apollo.EASING.CUBIC,
         duration: 1000,
       },
-      hiddenUntilFirstInteraction: false,
       initialPosition: { x: 0, y: 0 },
       detectTouch: false,
       emitGlobal: false,
       aion: null,
-      renderByPixel: false,
-      render: true,
     }
     this.options = {...defaults, ...options};
 
@@ -50,7 +46,6 @@ class Apollo {
     this.mousePosition = this.options.initialPosition;
     this.mouseRenderPosition = this.mousePosition;
     this.cursorPosition = this.mousePosition;
-    this.cursorBounding = (this.cursorElement as HTMLElement).getBoundingClientRect();
     this.cursorXTimeline = {
       start: 0,
       duration: this.options.easing.duration,
@@ -93,17 +88,10 @@ class Apollo {
     this.cursorXTimeline.current = this.cursorXTimeline.initial + (time * (this.cursorXTimeline.final - this.cursorXTimeline.initial));
     this.cursorYTimeline.current = this.cursorYTimeline.initial + (time * (this.cursorYTimeline.final - this.cursorYTimeline.initial));
 
-    const position = {
-      x: this.cursorXTimeline.current - this.cursorBounding.width / 2,
-      y: this.cursorYTimeline.current - this.cursorBounding.height / 2,
+    this.cursorPosition = {
+      x: this.cursorXTimeline.current,
+      y: this.cursorYTimeline.current,
     };
-
-    const roundedPosition = {
-      x: Math.round(this.cursorXTimeline.current - this.cursorBounding.width / 2),
-      y: Math.round(this.cursorYTimeline.current - this.cursorBounding.height / 2),
-    };
-
-    this.cursorPosition = this.options.renderByPixel ? roundedPosition : position;
 
     this.plugins.forEach((plugin) => plugin.frame && plugin.frame(this, delta));
     
@@ -111,20 +99,8 @@ class Apollo {
   }
   
   private render = (delta : number) : void => {
-    if (!this.options.render) return;
     this.plugins.forEach((plugin) => plugin.beforeRender && plugin.beforeRender(this, delta));
 
-    if (this.cursorElement !== null) {
-      const transform = `translateX(${this.cursorPosition.x}px) translateY(${this.cursorPosition.y}px) translateZ(0px)`;
-      (this.cursorElement as HTMLElement).style.transform = transform;
-    }
-
-    this.postRender(delta);
-
-    this.plugins.forEach((plugin) => plugin.afterRender && plugin.afterRender(this, delta));
-  }
-
-  private postRender(delta : number) {
     this.cursorXTimeline.initial = this.cursorXTimeline.current;
     this.cursorYTimeline.initial = this.cursorYTimeline.current;
 
@@ -142,6 +118,8 @@ class Apollo {
     this.velocity.y = Math.abs(this._velocity.y);
 
     this.cursorPositionPrev = this.cursorPosition;
+
+    this.plugins.forEach((plugin) => plugin.afterRender && plugin.afterRender(this, delta));
   }
 
   private bindEvents() {
@@ -193,7 +171,7 @@ class Apollo {
     const foundIndex = this.plugins.findIndex((p) => p.id === id);
     if (foundIndex === -1) return false;
     const found = this.plugins[foundIndex];
-    if (typeof found?.destroy === 'function') found.destroy();
+    if (typeof found.destroy === 'function') found.destroy();
     this.plugins.splice(foundIndex, 1);
     return true;
   }
@@ -225,10 +203,6 @@ class Apollo {
 
   public stopMouseTracking() {
     this._trackMouse = false;
-  }
-
-  public get cursorElement() : Element | null {
-    return this.options.cursor;
   }
 
   public get coords() : Vec2 {
