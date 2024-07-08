@@ -37,7 +37,6 @@ class Apollo {
       },
       initialPosition: { x: 0, y: 0 },
       detectTouch: false,
-      emitGlobal: false,
       aion: null,
     }
     this.options = {...defaults, ...options};

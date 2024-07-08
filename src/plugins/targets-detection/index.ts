@@ -16,6 +16,7 @@ class TargetsDetection implements ApolloPlugin {
   constructor(options : Partial<TargetsDetectionOptions>) {
     const defaults : TargetsDetectionOptions = {
       targets: [],
+      emitGlobal: true,
     };
 
     this.options = { ...defaults, ...options };
@@ -62,11 +63,11 @@ class TargetsDetection implements ApolloPlugin {
         if (isInRect(this.context.mouse, target.boundings as DOMRect) && !matchedOneMouse) {
           if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
             if (this.activeMouseTarget !== null) {
-              emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget })
+              if (this.options.emitGlobal) emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget });
               this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-leave');
             }
             this.activeMouseTarget = target;
-            emitEvent('apollo-mouse-enter', { target: this.activeMouseTarget });
+            if (this.options.emitGlobal) emitEvent('apollo-mouse-enter', { target: this.activeMouseTarget });
             this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-enter');
           }
           matchedOneMouse = true;
@@ -74,11 +75,11 @@ class TargetsDetection implements ApolloPlugin {
         if (isInRect(this.context.coords, target.boundings as DOMRect) && !matchedOneCursor) {
           if (this.activeCursorTarget === null || this.activeCursorTarget.id !== target.id) {
             if(this.activeCursorTarget !== null) {
-              emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
+              if (this.options.emitGlobal) emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
               this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-leave');
             }
             this.activeCursorTarget = target;
-            emitEvent('apollo-cursor-enter', { target: this.activeCursorTarget });
+            if (this.options.emitGlobal) emitEvent('apollo-cursor-enter', { target: this.activeCursorTarget });
             this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-enter');
           }
           matchedOneCursor = true;
