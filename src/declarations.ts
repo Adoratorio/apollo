@@ -14,7 +14,6 @@ export interface ApolloOptions {
   easing : Easing,
   initialPosition : Vec2,
   detectTouch : boolean,
-  emitGlobal : boolean,
   aion : Aion | null,
 }
 

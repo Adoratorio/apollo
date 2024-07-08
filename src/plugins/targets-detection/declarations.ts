@@ -16,5 +16,6 @@ export interface Vec2 {
 }
 
 export interface TargetsDetectionOptions {
-  targets : Array<TargetDescriptor>
+  targets : Array<TargetDescriptor>,
+  emitGlobal : boolean,
 }
