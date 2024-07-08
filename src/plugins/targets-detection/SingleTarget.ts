@@ -29,7 +29,7 @@ class SingleTarget {
   }
   
   calculateBoundings() {
-    this.boundingRect = this.element.getBoundingClientRect();
+    this.boundingRect = this.element.getBoundingClientRect() as DOMRect;
     this.boundings = {
       top: this.boundingRect.top - this.descriptor.offset.y,
       bottom: this.boundingRect.bottom + this.descriptor.offset.y,
