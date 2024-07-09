@@ -1,9 +1,15 @@
+export const VISIBILITY_CHECK = {
+  NONE: 'none',
+  PARTIAL: 'partial',
+  FULL: 'full',
+}
+
 export interface TargetDescriptor {
   id : string,
   elements : Array<ApolloHTMLElement>,
   offset : Vec2,
   callback : Function,
-  checkVisibility : boolean,
+  checkVisibility : string,
 }
 
 export interface ApolloHTMLElement extends HTMLElement {
