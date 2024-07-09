@@ -1,6 +1,6 @@
 import Apollo from "../..";
 import { ApolloPlugin } from "../../declarations";
-import { ApolloHTMLElement, TargetDescriptor, TargetsDetectionOptions } from "./declarations";
+import { ApolloHTMLElement, TargetDescriptor, TargetsDetectionOptions, VISIBILITY_CHECK } from "./declarations";
 import SingleTarget from "./SingleTarget";
 import { isInRect, isVisible, emitEvent } from './utils';
 
@@ -12,6 +12,15 @@ class TargetsDetection implements ApolloPlugin {
   public name : string = 'TargetsDetection';
   public activeMouseTarget : SingleTarget | null = null;
   public activeCursorTarget : SingleTarget | null = null;
+
+  static VISIBILITY_CHECK = VISIBILITY_CHECK;
+
+  static EVENTS = {
+    MOUSE_ENTER: 'apollo-mouse-enter',
+    MOUSE_LEAVE: 'apollo-mouse-leave',
+    CURSOR_ENTER: 'apollo-cursor-enter',
+    CURSOR_LEAVE: 'apollo-cursor-leave',
+  };
 
   constructor(options : Partial<TargetsDetectionOptions>) {
     const defaults : TargetsDetectionOptions = {
@@ -44,13 +53,13 @@ class TargetsDetection implements ApolloPlugin {
 
     // Check the out
     if (this.activeMouseTarget !== null && !isInRect(this.context.mouse, this.activeMouseTarget.boundings as DOMRect)) {
-      emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget });
-      this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-leave');
+      emitEvent(TargetsDetection.EVENTS.MOUSE_LEAVE, { target: this.activeMouseTarget });
+      this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, TargetsDetection.EVENTS.MOUSE_LEAVE);
       this.activeMouseTarget = null;
     }
     if (this.activeCursorTarget !== null && !isInRect(this.context.coords, this.activeCursorTarget.boundings as DOMRect)) {
-      emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
-      this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-leave');
+      emitEvent(TargetsDetection.EVENTS.CURSOR_LEAVE, { target: this.activeCursorTarget });
+      this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, TargetsDetection.EVENTS.CURSOR_LEAVE);
       this.activeCursorTarget = null;
     }
 
@@ -63,24 +72,28 @@ class TargetsDetection implements ApolloPlugin {
         if (isInRect(this.context.mouse, target.boundings as DOMRect) && !matchedOneMouse) {
           if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
             if (this.activeMouseTarget !== null) {
-              if (this.options.emitGlobal) emitEvent('apollo-mouse-leave', { target: this.activeMouseTarget });
-              this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-leave');
+              if (this.options.emitGlobal)
+                emitEvent(TargetsDetection.EVENTS.MOUSE_LEAVE, { target: this.activeMouseTarget });
+              this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, TargetsDetection.EVENTS.MOUSE_LEAVE);
             }
             this.activeMouseTarget = target;
-            if (this.options.emitGlobal) emitEvent('apollo-mouse-enter', { target: this.activeMouseTarget });
-            this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, 'apollo-mouse-enter');
+            if (this.options.emitGlobal)
+              emitEvent(TargetsDetection.EVENTS.MOUSE_ENTER, { target: this.activeMouseTarget });
+            this.activeMouseTarget.descriptor.callback(this.activeMouseTarget, TargetsDetection.EVENTS.MOUSE_ENTER);
           }
           matchedOneMouse = true;
         }
         if (isInRect(this.context.coords, target.boundings as DOMRect) && !matchedOneCursor) {
           if (this.activeCursorTarget === null || this.activeCursorTarget.id !== target.id) {
             if(this.activeCursorTarget !== null) {
-              if (this.options.emitGlobal) emitEvent('apollo-cursor-leave', { target: this.activeCursorTarget });
-              this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-leave');
+              if (this.options.emitGlobal)
+                emitEvent(TargetsDetection.EVENTS.CURSOR_LEAVE, { target: this.activeCursorTarget });
+              this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, TargetsDetection.EVENTS.CURSOR_LEAVE);
             }
             this.activeCursorTarget = target;
-            if (this.options.emitGlobal) emitEvent('apollo-cursor-enter', { target: this.activeCursorTarget });
-            this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, 'apollo-cursor-enter');
+            if (this.options.emitGlobal)
+              emitEvent(TargetsDetection.EVENTS.CURSOR_ENTER, { target: this.activeCursorTarget });
+            this.activeCursorTarget.descriptor.callback(this.activeCursorTarget, TargetsDetection.EVENTS.CURSOR_ENTER);
           }
           matchedOneCursor = true;
         }
