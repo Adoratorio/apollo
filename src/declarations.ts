@@ -31,7 +31,6 @@ export interface ApolloPlugin {
   register? : Function       // Called when the plugin is registered
   destroy? : Function        // Called when a plugin is unregistered
   preFrame? : Function       // Called at the start of the frame before apollo code
-  frame? : Function          // Called each aion frame at the end of apollo code
-  beforeRender? : Function   // Called before applying rendering to cursror
-  afterRender? : Function    // Called after applying rendering to cursor
+  frame? : Function          // Called each aion frame after apollo calculations
+  afterFrame? : Function     // Called at the very end of apollo frame code
 }
