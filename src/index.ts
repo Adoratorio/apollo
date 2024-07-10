@@ -76,11 +76,14 @@ class Apollo {
   }
 
   private frame = (delta : number) : void => {
+    // Call PLUGIN preFrame
     this.plugins.forEach((plugin) => plugin.preFrame && plugin.preFrame(this, delta));
 
+    // Get the new final position to go to
     this.cursorXTimeline.final = this.mouseRenderPosition.x;
     this.cursorYTimeline.final = this.mouseRenderPosition.y;
   
+    // Calculate current timeline value
     const deltaT : number = Math.min(Math.max(delta, 0), this.options.easing.duration);
     const time : number = this.options.easing.mode(deltaT / this.options.easing.duration);
 
@@ -92,17 +95,7 @@ class Apollo {
       y: this.cursorYTimeline.current,
     };
 
-    this.plugins.forEach((plugin) => plugin.frame && plugin.frame(this, delta));
-    
-    this.render(delta);
-  }
-  
-  private render = (delta : number) : void => {
-    this.plugins.forEach((plugin) => plugin.beforeRender && plugin.beforeRender(this, delta));
-
-    this.cursorXTimeline.initial = this.cursorXTimeline.current;
-    this.cursorYTimeline.initial = this.cursorYTimeline.current;
-
+    // Calculate velocity and direction
     this._velocity = {
       x: (this.cursorPosition.x - this.cursorPositionPrev.x) / delta,
       y: (this.cursorPosition.y - this.cursorPositionPrev.y) / delta,
@@ -116,9 +109,16 @@ class Apollo {
     this.velocity.x = Math.abs(this._velocity.x);
     this.velocity.y = Math.abs(this._velocity.y);
 
+    // Call PLUGIN frame callback before resetting the timeline and values
+    this.plugins.forEach((plugin) => plugin.frame && plugin.frame(this, delta));
+
+    this.cursorXTimeline.initial = this.cursorXTimeline.current;
+    this.cursorYTimeline.initial = this.cursorYTimeline.current;
+
     this.cursorPositionPrev = this.cursorPosition;
 
-    this.plugins.forEach((plugin) => plugin.afterRender && plugin.afterRender(this, delta));
+    // Call PLUGIN afterFrame
+    this.plugins.forEach((plugin) => plugin.afterFrame && plugin.afterFrame(this, delta));
   }
 
   private bindEvents() {
