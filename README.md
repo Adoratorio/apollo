@@ -133,6 +133,6 @@ With x and y props exposes the diffrence in time from the previous frame of the 
 • Type: `interface Vec2 { x:number, y:number }`
 Comparing the previous frame and the current one holds the value of the direction the cursor is moving `-1` for right to left and bottom to top, `1` for left to right or top to bottom. Can be multiplied with velocity to have full information about the cursor movement compared to previous frame.
 
-### trackMouse
+#### trackMouse
 • Type: `boolean`
 Get or set the current mouse tracking state. If `true` the mouse is being tracked and the `coords` and `mouse` are updated respectively. If `false` it will stop recording mouse position (not the frame or the engine itself).

@@ -21,11 +21,11 @@ class CSSRender implements ApolloPlugin {
     this.cursorBounding = (this.cursorElement as HTMLElement).getBoundingClientRect() as DOMRect;
   }
   
-  register(context : Apollo) {
+  public register(context : Apollo) {
     this.context = context;
   }
 
-  frame() {
+  public frame() {
     if (!this.context) return;
     if (!this.options.render) return;
     
@@ -38,6 +38,14 @@ class CSSRender implements ApolloPlugin {
       const transform = `translateX(${position.x}px) translateY(${position.y}px) translateZ(0px)`;
       (this.cursorElement as HTMLElement).style.transform = transform;
     }
+  }
+
+  public startRender() {
+    this.options.render = true;
+  }
+
+  public stopRender() {
+    this.options.render = false;
   }
 
   public get cursorElement() : Element | null {
