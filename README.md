@@ -1,93 +1,138 @@
 # Apollo
 
-Create custom cursors with integrated animated props.
+An engine to create custom cursor animations and effects.
 
 ## Installation
+Apollo s written in typescript and available as npm package with the alongside types definitions. So install as always
+
 ```bash
 # Install package
 npm install @adoratorio/apollo
 ```
 ## Usage
+Then it can be required or imported as module
 
-Since this package has a [pkg.module](https://github.com/rollup/rollup/wiki/pkg.module) field, it’s highly recommended to import it as an ES6 module with some bundlers like [webpack](https://webpack.js.org/) or [rollup](https://rollupjs.org/):
 ```javascript
 import Apollo from '@adoratorio/apollo';
 const apollo = new Apollo({ });
 ```
-If you are not using any bundlers, you can just load the UMD bundle:
-```html
-<script src="/apollo/umd/index.js"></script>
-<script>var apollo = window.Apollo({ });</script>
+From now on you can instanciate and register plugins to handle the rendering of the amount with different teqniques or to add functionalities. Plugins stucture is explained later.
+
+For the plugins they can also be imported singularly as modules from the plguins folder and then registered using the `registerPlugin` method.
+
+```javascript
+import CSSRender from '@/adoratorio/apollo/plugins/css-render';
+apollo.registerPlugin(new CSSRender({ /* ... plugin options */ }));
 ```
+
 ## Available options
-Medusa accept in the constructor and `option` object with the following possible props.
+Apollo accept in the constructor an `option` object with the following possible props.
 
 |parameter|type|default|description|
 |:--------|:--:|:-----:|:----------|
-|cursor|`HTMLElement`|`'.apollo__cursor'`|The HTML element reiceving the transforms to follow the mouse|
-|props|`Array<PropertyDescriptor>`|`[]`|An array of Propery Descriptors to define wich props will be animated, a timeline will be created for each prop|
 |easing|`Easing`|`{ mode: Apollo.EASING.CUBIC, duration: 1000 }`|An easing object used to describe the cursor element aniamtion|
-|target|`Array<TargetDescriptor>`|`[]`|An array of Targets to describe witch elements will trigger an event when the mouse pass hover or out it|
-|hiddenUntilFirstInteraction|boolean|`false`|If you want to keep the cursor element invisibile until the first valid user interaction is performed|
 |initialPosition|`Vec2`|`{ x: 0, y: 0 }`|A Two components (x, y) vector to determinate the strarting position of the cursor element|
 |detectTouch|boolean|`true`|If the touch events counts as valid interaction to evaluate a new cursor position|
-|emitGlobal|boolean|`true`|If a global event is fired on `window` on items over or out|
 |aion|`Aion`|`new Aion()`|An `Aion` instance to be used as engine, if not submitted one will be created for you|
-|renderByPixel|boolean|`false`|If values rounding is used before applying styles|
 
 ## APIs
-Targets are the interaction core, having callback and event on hover and leave of the element, you can define targets passing target descriptors to the constructor or using the dedicated method
+
+### Public Methods
+
+### registerPlugin()
+
+Register a plugin inside the current `Apollo` instance. Return a string with the registration id, useful for unregister
 ```typescript
-apolloInstance.addTarget(targets Array<TargetDescriptor>)
+apollo.registerPlugin(plugin : ApolloPlugin) : string
 ```
-Anytime an element in target is hovered or leaved a global event is emitted (if the emitGlobal option is set to true).
-Emitted events are
 
-|name|when|
-|:---|:---|
-|`apollo-mouse-enter`|When the mouse pointer enter a target|
-|`apollo-cursor-enter`|When the cursor element enter a target|
-|`apollo-mouse-leave`|When the mouse pointer leave a target|
-|`apollo-cursor-leave`|When the cursor element enter a target|
+**Parameters**
 
-Having `TargetDescriptor` defined as follow
+| parameter | required | description |
+|:---|:---:|:---|
+| plugin | `ApolloPlugin` | The instance of the plugin to register |
 
-|parameter|type|descriptor|
-|:--------|:--:|:---------|
-|id|`string`|The id of the target, used to identify the target
-|elements|`Array<HTMLElement>`|The HTMLElements array used to detect hover and leave
-|offset|`{ x: number, y: number }`|The offset that will trigger hover and leave on elements
-|callback|`Function`|Callback function for hover and leave
-|checkVisibility|`Boolean`|If you need to test the element visibility before triggering hover
+### registerPlugins()
 
-You can animate some css, attributes or js values of the DOM cursor element, or any other DOM element actually, by passing in a property descriptor in the `props` array parameter in constructor or adding a prop with the dedicated method.
+Register multiple plugins inside the current `Apollo` instance. Return an array of strings with the registration ids in positional corrispondence with the provided plugins array
 ```typescript
-apolloInstance.addProperties(props : Array<PropertyDescriptor>)
+apollo.registerPlugins(plugin : Array<ApolloPlugin>) : Array<string>
 ```
-Then when you need to update the value and make apollo to ease from the actual value to the newly setted one simply get the property and change its value like so
+
+**Parameters**
+
+| parameter | required | description |
+|:---|:---:|:---|
+| plugin | `ApolloPlugin` | The instance of the plugin to register |
+
+### unregisterPlugin()
+
+Remove a plugin from the current `Apollo` instance using the registration id of the plugin. Return `true` if the plugin was found and unregistered
 ```typescript
-apolloInstance.getProperty(id : string).value = value : any;
+apollo.unregisterPlugin(id : string) : boolean
 ```
-Having the `PropertyDescriptor` defined ad follow
 
-|parameter|type|descriptor|
-|:--------|:--:|:---------|
-|id|`string`|The id that will be used to identify the property when accessing it|
-|key|`string`|The key that will be used when rendering the animation, for example `translateX`|
-|type|`string`|Determins how the property will be used when rendering can be `Aplllo.PROPERTY_TYPE.TYPELESS` or `Apollo.PROPERTY_TYPE.STYLE` or `Apollo.PROPERTY_TYPE.TRANSFORM` or `Apollo.PROPERTY_TYPE.ATTRIBUTE`|
-|target|`Element`|The DOM element used as target for rendering, not needed if prop is typeless|
-|suffix|`string`|The suffix string used to render css props or transform will be applied in the form of `${value}${suffix}`|
-|easing|`{ mode: Function, duration: number }`|The easing descriptor used to ease between values
-|initial|`number`|The starting value for the property
-|precision|`number`|Number of digits used to round the final rendered value
+**Parameters**
 
-Each property exposes two additional methods: `play` and `pause`. Usable as follow
+| parameter | required | description |
+|:---|:---:|:---|
+| plugin | `ApolloPlugin` | The instance of the plugin to register |
 
+### getPlugin()
+
+Get instance of a registerd plugin using his name
 ```typescript
-apolloInstance.getProperty('prop_id').pause();
-apolloInstance.getProperty('prop_id').play(resumeValue? : number);
+apollo.getPlugin(name : String) : ApolloPlugin | undefined
 ```
- 
-*Watch out*: if the current target of the prop is the cursor element itself and you are animating the `translateX` or `translateY` transform you need to call `apolloInstance.stopMouseTracking()` and later when you need to start the mouse following again `apolloInstance.startMouseTracking()`.
 
-__Anyway__ this is not an actual animation engine, is used just to update some props around the cursor in a specific way avoiding the necessity to build a complete animation system. If you need more than this a complex animation system is required maybe with some animation frameworks.
+**Parameters**
+
+| parameter | required | description |
+|:---|:---:|:---|
+| name | `string` | The name of the plugin to retrive |
+
+### startMouseTracking()
+
+Starts the mouse tracking per frame. Same as `apollo.trackMouse = true`.
+```typescript
+apollo.startMouseTracking();
+```
+
+### stopMouseTracking()
+
+Stops temporarly the mouse tracking per frame. Same as `apollo.trackMouse = false`.
+```typescript
+apollo.stopMouseTracking();
+```
+
+### Instance Properties
+
+The Apollo instance exposes two main properties:
+
+#### coords 
+• Type: `interface Vec2 { x:number, y:number }`
+With x and y props exposes the current smoothed position in screen pixels, updated frame-by-frame.
+
+#### normalizedCoords
+• Type: `interface Vec2 { x:number, y:number }`
+With x and y props exposes the current smoothed position in normalized values from `-1` to `1`, updated frame-by-frame.
+
+#### mouse 
+• Type: `interface Vec2 { x:number, y:number }`
+With x and y props exposes the current native mouse pointer position in screen pixels, updated frame-by-frame.
+
+#### normalizedMouse
+• Type: `interface Vec2 { x:number, y:number }`
+With x and y props exposes the current native mouse pointer position in normalized values from `-1` to `1`, updated frame-by-frame.
+
+#### velocity 
+• Type: `interface Vec2 { x:number, y:number }`
+With x and y props exposes the diffrence in time from the previous frame of the smoothed coords (not the mouse) indicating how much they have change in one frame using absolute values, updated frame-by-frame.
+
+#### direction
+• Type: `interface Vec2 { x:number, y:number }`
+Comparing the previous frame and the current one holds the value of the direction the cursor is moving `-1` for right to left and bottom to top, `1` for left to right or top to bottom. Can be multiplied with velocity to have full information about the cursor movement compared to previous frame.
+
+### trackMouse
+• Type: `boolean`
+Get or set the current mouse tracking state. If `true` the mouse is being tracked and the `coords` and `mouse` are updated respectively. If `false` it will stop recording mouse position (not the frame or the engine itself).
