@@ -18,7 +18,7 @@
 | elements | `Array<HTMLElements>` | `[]` | The list of DOM nodes to watch |
 | offset | `Vec2` | `{ x: 0, y: 0 }` | The virtual offset around the element in both direction included when triggering events |
 | callback | `Function` | `(target, type) => { }` | The function called on each event, will have the target and the event type as params  |
-| checkVisibility | `TargetDescriptor.NONE \| TargetDescriptor.FULL \| TargetDescriptor.PARTIAL` | `TargetDescriptor.NONE` | If to check the full or partial visibility of the element before firing events or not checking at all  |
+| checkVisibility | `TargetDetection.VISIBILITY_CHECK.NONE \| TargetDetection.VISIBILITY_CHECK.FULL \| TargetDetection.VISIBILITY_CHECK.PARTIAL` | `TargetDetection.VISIBILITY_CHECK.NONE` | If to check the full or partial visibility of the element before firing events or not checking at all  |
 
 ```javascript
 import TargetsDetection from '@adoratorio/apollo/plugins/targets-detection';
@@ -30,7 +30,7 @@ apollo.registerPlugin(new TargetsDetection({
   callback: (target, type) => {
     console.log(target, type);
   },
-  ckeckVisibility: TargetDescriptor.PARTIAL,
+  ckeckVisibility: TargetDetection.VISIBILITY_CHECK.PARTIAL,
 }));
 ```
 
@@ -45,10 +45,10 @@ Emitted events are
 
 |enumerator|name|when|
 |:---|:---|:---|
-|TargetsDetaction.MOUSE_ENTER|`apollo-mouse-enter`|When the mouse pointer enter a target|
-|TargetsDetaction.CURSOR_ENTER|`apollo-cursor-enter`|When the cursor element enter a target|
-|TargetsDetaction.MOUSE_LEAVE|`apollo-mouse-leave`|When the mouse pointer leave a target|
-|TargetsDetaction.CURSOR_LEAVE||`apollo-cursor-leave`|When the cursor element enter a target|
+|TargetsDetaction.EVENTS.MOUSE_ENTER|`apollo-mouse-enter`|When the mouse pointer enter a target|
+|TargetsDetaction.EVENTS.CURSOR_ENTER|`apollo-cursor-enter`|When the cursor element enter a target|
+|TargetsDetaction.EVENTS.MOUSE_LEAVE|`apollo-mouse-leave`|When the mouse pointer leave a target|
+|TargetsDetaction.EVENTS.CURSOR_LEAVE|`apollo-cursor-leave`|When the cursor element enter a target|
 
 ## Public methods
 
