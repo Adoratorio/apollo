@@ -7,14 +7,14 @@
 
 | parameter | type | default | description |
 | :- | :-: | :-: | :- |
-| cursor | `HTMLElement` | The DOM element on which the renderer will apply the style |
+| cursor | `HTMLElement` | `null` | The DOM element on which the renderer will apply the style |
 | precision | `number` | `4` | The number of digits after the iteger part to round to when rendering |
 | render | `boolean` | `true` | If the style is currently applied every frame or not, use to pause or play rendering |
 
 ```javascript
 import CSSRender from '@adoratorio/apollo/plugins/css-render';
 
-hades.registerPlugin(new CSSRender({
+apollo.registerPlugin(new CSSRender({
   cursor: document.querySelector('.cursor'),
 }));
 ```
