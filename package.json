@@ -1,13 +1,13 @@
 {
   "name": "@adoratorio/apollo",
-  "version": "3.0.3",
+  "version": "3.0.7",
   "description": "A JS library for custom cursor",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    "./plugins": "./dist/plugins"
-  },
   "module": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./plugins/": "./dist/plugins/"
+  },
+  "types": "dist/index.d.ts",
   "files": [
     "dist/**/*"
   ],
