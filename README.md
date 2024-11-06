@@ -21,7 +21,7 @@ From now on you can instanciate and register plugins to handle the rendering of 
 For the plugins they can also be imported singularly as modules from the plguins folder and then registered using the `registerPlugin` method.
 
 ```javascript
-import CSSRender from '@/adoratorio/apollo/plugins/css-render';
+import { CSSRender } from '@/adoratorio/apollo/plugins';
 apollo.registerPlugin(new CSSRender({ /* ... plugin options */ }));
 ```
 
