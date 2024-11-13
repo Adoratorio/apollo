@@ -122,7 +122,7 @@ class Apollo {
   }
 
   private bindEvents() {
-    document.body.addEventListener('mousemove', this.mouseMove, { passive: true });
+    document.body.addEventListener('pointermove', this.mouseMove, { passive: true });
 
     if (this.options.detectTouch) {
       document.body.addEventListener('touchstart', this.touchMove, { passive: true });
