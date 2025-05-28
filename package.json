@@ -1,6 +1,6 @@
 {
   "name": "@adoratorio/apollo",
-  "version": "3.0.22",
+  "version": "3.0.23",
   "description": "A JS library for custom cursor",
   "module": "dist/index.js",
   "exports": {
@@ -38,7 +38,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@adoratorio/aion": "^0.3.3"
+    "@adoratorio/aion": "^0.3.3",
+    "@adoratorio/apollo": "^3.0.22"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
