@@ -1,4 +1,5 @@
 import Aion from '@adoratorio/aion';
+import Apollo from '.';
 
 export interface Easing {
   mode : Function,
@@ -26,11 +27,11 @@ export interface Timeline {
 }
 
 export interface ApolloPlugin {
-  id? : string,              // Plugin id assigned during registration
-  name : string,             // Human readable name for the plugin
-  register? : Function       // Called when the plugin is registered
-  destroy? : Function        // Called when a plugin is unregistered
-  preFrame? : Function       // Called at the start of the frame before apollo code
-  frame? : Function          // Called each aion frame after apollo calculations
-  afterFrame? : Function     // Called at the very end of apollo frame code
+  id? : string,                                              // Plugin id assigned during registration
+  name : string,                                             // Human readable name for the plugin
+  register?: (context: Apollo) => void;                      // Called when the plugin is registered
+  destroy?: () => void;                                      // Called when a plugin is unregistered
+  preFrame?: (context: Apollo, delta: number) => void;       // Called at the start of the frame before apollo code
+  frame?: (context: Apollo, delta: number) => void;          // Called each aion frame after apollo calculations
+  afterFrame?: (context: Apollo, delta: number) => void;     // Called at the very end of apollo frame code
 }
