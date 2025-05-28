@@ -35,6 +35,6 @@
     "@adoratorio/aion": "^0.3.3"
   },
   "devDependencies": {
-    "typescript": "^3.3.3333"
+    "typescript": "^5.8.3"
   }
 }

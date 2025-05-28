@@ -1,4 +1,4 @@
-import { Vec2, ApolloHTMLElement, VISIBILITY_CHECK } from "./declarations";
+import { Vec2, VISIBILITY_CHECK } from "./declarations";
 import SingleTarget from "./SingleTarget";
 
 export function isInRect(point : Vec2, rect : DOMRect, offset : Vec2 = { x: 0, y: 0 }) {
@@ -10,31 +10,25 @@ export function isInRect(point : Vec2, rect : DOMRect, offset : Vec2 = { x: 0, y
   )
 }
 
-export function isVisible(target : SingleTarget) {
+export function isVisible(target: SingleTarget) {
   if (!target.descriptor.checkVisibility || target.descriptor.checkVisibility === VISIBILITY_CHECK.NONE) return true;
 
-  const topLeftElement = document.elementFromPoint(target.boundingRect.left + 1, target.boundingRect.top + 1);
-  const bottomLeftElement = document.elementFromPoint(target.boundingRect.left + 1, target.boundingRect.bottom - 1);
-  const topRightElement = document.elementFromPoint(target.boundingRect.right - 1, target.boundingRect.top + 1);
-  const bottomRightElement = document.elementFromPoint(target.boundingRect.right - 1, target.boundingRect.bottom - 1);
+  const rect = target.boundingRect;
+  const points = [
+    { x: rect.left + 1, y: rect.top + 1 },
+    { x: rect.left + 1, y: rect.bottom - 1 },
+    { x: rect.right - 1, y: rect.top + 1 },
+    { x: rect.right - 1, y: rect.bottom - 1 },
+  ];
+  
+  const elements = points.map(({x, y}) => document.elementFromPoint(x, y));
 
   if (target.descriptor.checkVisibility === VISIBILITY_CHECK.PARTIAL) {
-    if (target.element.contains(topLeftElement)) return true;
-    if (target.element.contains(bottomLeftElement)) return true;
-    if (target.element.contains(topRightElement)) return true;
-    if (target.element.contains(bottomRightElement)) return true;
-
-    return false;
+    return elements.some(el => target.element.contains(el));
   }
 
   if (target.descriptor.checkVisibility === VISIBILITY_CHECK.FULL) {
-    if(
-      target.element.contains(topLeftElement) &&
-      target.element.contains(bottomLeftElement) &&
-      target.element.contains(topRightElement) &&
-      target.element.contains(bottomRightElement)
-    ) return true;
-    return false;
+    return elements.every(el => target.element.contains(el));
   }
 
   return false;

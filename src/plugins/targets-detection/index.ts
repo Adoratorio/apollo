@@ -67,7 +67,7 @@ class TargetsDetection implements ApolloPlugin {
     let matchedOneCursor = false;
     for (let i = 0; i < this._targets.length; i++) {
       const target = this._targets[i];
-      if (isVisible(target)) {
+      if (target && isVisible(target)) {
         // Check the in
         if (isInRect(this.context.mouse, target.boundings as DOMRect) && !matchedOneMouse) {
           if (this.activeMouseTarget === null || this.activeMouseTarget.id !== target.id) {
@@ -119,8 +119,7 @@ class TargetsDetection implements ApolloPlugin {
   public removeTarget(id : string) {
     for (let index = this._targets.length - 1; index >= 0; index--) {
       const target = this._targets[index];
-      if (target.descriptor.id === id) {
-        delete this._targets[index];
+      if (target && target.descriptor.id === id) {
         this._targets.splice(index, 1);
       }
     }
@@ -129,9 +128,8 @@ class TargetsDetection implements ApolloPlugin {
   public pullFromTarget(element : ApolloHTMLElement) {
     for (let index = this._targets.length - 1; index >= 0; index--) {
       const target = this._targets[index];
-      if (target.id === element._apolloId) {
+      if (target && target.id === element._apolloId) {
         element._apolloId = '-1';
-        delete this._targets[index];
         this._targets.splice(index, 1);
       }
     }

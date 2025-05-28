@@ -141,8 +141,8 @@ class Apollo {
 
   private touchMove = (event : TouchEvent) : void => {
     this.mousePosition = {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY,
+      x: event.touches[0]?.clientX || 0,
+      y: event.touches[0]?.clientY || 0,
     };
     if (!this._trackMouse) return;
     this.mouseRenderPosition = this.mousePosition;
@@ -155,22 +155,24 @@ class Apollo {
   }
 
   public registerPlugin(plugin : ApolloPlugin, id? : string) : string {
-    let i = null;
-    if (typeof id === 'undefined') {
-      i = `hades-plugin-${this.internalId}`;
-      this.internalId += 1;
-    } else {
-      i = id;
+    if (!plugin.name) {
+      throw new Error('Plugin must have a name property');
     }
-    this.register(plugin, i);
-    return i;
+
+    if (this.plugins.some(p => p.name === plugin.name)) {
+      throw new Error(`Plugin with name "${plugin.name}" is already registered`);
+    }
+
+    const pluginId = id || `apollo-plugin-${this.internalId++}`;
+    this.register(plugin, pluginId);
+    return pluginId;
   }
 
   public unregisterPlugin(id : string) : boolean {
     const foundIndex = this.plugins.findIndex((p) => p.id === id);
     if (foundIndex === -1) return false;
     const found = this.plugins[foundIndex];
-    if (typeof found.destroy === 'function') found.destroy();
+    if (found && typeof found.destroy === 'function') found.destroy();
     this.plugins.splice(foundIndex, 1);
     return true;
   }
@@ -182,6 +184,24 @@ class Apollo {
     });
 
     return is;
+  }
+
+  private unbindEvents() {
+    document.body.removeEventListener('pointermove', this.mouseMove);
+
+    if (this.options.detectTouch) {
+      document.body.removeEventListener('touchstart', this.touchMove);
+      document.body.removeEventListener('touchmove', this.touchMove);
+    }
+  }
+
+  public destroy() {
+    this.unbindEvents();
+    this.engine.remove(this.aionId);
+    this.plugins.forEach(plugin => {
+      if (plugin.destroy) plugin.destroy();
+    });
+    this.plugins = [];
   }
 
   public getPlugin(name : string) : ApolloPlugin | undefined {
