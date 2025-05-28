@@ -5,13 +5,13 @@ import SingleTarget from "./SingleTarget";
 import { isInRect, isVisible, emitEvent } from './utils';
 
 class TargetsDetection implements ApolloPlugin {
-  private context : Apollo | null = null;
-  private options : TargetsDetectionOptions;
-  private _targets : Array<SingleTarget> = [];
+  private context: Apollo | null = null;
+  private options: TargetsDetectionOptions;
+  private _targets: Array<SingleTarget> = [];
   
-  public name : string = 'TargetsDetection';
-  public activeMouseTarget : SingleTarget | null = null;
-  public activeCursorTarget : SingleTarget | null = null;
+  public name: string = 'TargetsDetection';
+  public activeMouseTarget: SingleTarget | null = null;
+  public activeCursorTarget: SingleTarget | null = null;
 
   static VISIBILITY_CHECK = VISIBILITY_CHECK;
 
@@ -22,8 +22,8 @@ class TargetsDetection implements ApolloPlugin {
     CURSOR_LEAVE: 'apollo-cursor-leave',
   };
 
-  constructor(options : Partial<TargetsDetectionOptions>) {
-    const defaults : TargetsDetectionOptions = {
+  constructor(options: Partial<TargetsDetectionOptions>) {
+    const defaults: TargetsDetectionOptions = {
       targets: [],
       emitGlobal: true,
     };
@@ -38,11 +38,11 @@ class TargetsDetection implements ApolloPlugin {
     });
   }
 
-  public register(context : Apollo) : void {
+  public register(context: Apollo): void {
     this.context = context;
   }
 
-  public preFrame(context : Apollo, delta : number) {
+  public preFrame(context: Apollo, delta: number) {
     this._targets.forEach(target => target.frame(delta));
 
     this.checkTargets();
@@ -101,22 +101,22 @@ class TargetsDetection implements ApolloPlugin {
     }
   }
 
-  public render(context : Apollo, delta : number) {
+  public render(context: Apollo, delta: number) {
     this._targets.forEach(target => target.render(delta));
   }
 
-  public afterRender(context : Apollo, delta : number) {
+  public afterRender(context: Apollo, delta: number) {
     this._targets.forEach(target => target.postRender(delta));
   }
 
-  public addTarget(target : TargetDescriptor) {
+  public addTarget(target: TargetDescriptor) {
     target.elements.forEach((element, index) => {
       if (element._apolloId !== '-1') return;
       this._targets.push(new SingleTarget(element, target, index));
     });
   }
 
-  public removeTarget(id : string) {
+  public removeTarget(id: string) {
     for (let index = this._targets.length - 1; index >= 0; index--) {
       const target = this._targets[index];
       if (target && target.descriptor.id === id) {
@@ -125,7 +125,7 @@ class TargetsDetection implements ApolloPlugin {
     }
   }
   
-  public pullFromTarget(element : ApolloHTMLElement) {
+  public pullFromTarget(element: ApolloHTMLElement) {
     for (let index = this._targets.length - 1; index >= 0; index--) {
       const target = this._targets[index];
       if (target && target.id === element._apolloId) {

@@ -1,13 +1,13 @@
 import { TargetDescriptor, ApolloHTMLElement } from "./declarations";
 
 class SingleTarget {
-  element : ApolloHTMLElement;
-  descriptor : TargetDescriptor;
-  id : string;
-  boundingRect : DOMRect = {} as unknown as DOMRect;
-  boundings : Partial<DOMRect> = {} as unknown as DOMRect;
+  element: ApolloHTMLElement;
+  descriptor: TargetDescriptor;
+  id: string;
+  boundingRect: DOMRect = {} as unknown as DOMRect;
+  boundings: Partial<DOMRect> = {} as unknown as DOMRect;
 
-  constructor(element : ApolloHTMLElement, descriptor : TargetDescriptor, id : number) {
+  constructor(element: ApolloHTMLElement, descriptor: TargetDescriptor, id: number) {
     this.element = element;
     this.descriptor = descriptor;
     this.id = `${this.descriptor.id}-${id}`;
@@ -16,15 +16,15 @@ class SingleTarget {
     this.calculateBoundings();
   }
   
-  frame(delta : number) {
+  frame(delta: number) {
     this.calculateBoundings();
   }
   
-  render(delta : number) {
+  render(delta: number) {
     
   }
   
-  postRender(delta : number) {
+  postRender(delta: number) {
     
   }
   

@@ -3,14 +3,14 @@ import { ApolloPlugin } from "../../declarations";
 import { CSSRenderOptions } from "./declarations";
 
 class CSSRender implements ApolloPlugin {
-  private context : Apollo | null = null;
-  private options : CSSRenderOptions;
-  private cursorBounding : DOMRect;
+  private context: Apollo | null = null;
+  private options: CSSRenderOptions;
+  private cursorBounding: DOMRect;
   
-  public name : string = 'CSSRender';
+  public name: string = 'CSSRender';
 
-  constructor(options : Partial<CSSRenderOptions>) {
-    const defaults : CSSRenderOptions = {
+  constructor(options: Partial<CSSRenderOptions>) {
+    const defaults: CSSRenderOptions = {
       cursor: document.querySelector('.apollo__cursor') as HTMLElement,
       precision: 4,
       render: true,
@@ -21,7 +21,7 @@ class CSSRender implements ApolloPlugin {
     this.cursorBounding = (this.cursorElement as HTMLElement).getBoundingClientRect() as DOMRect;
   }
   
-  public register(context : Apollo) {
+  public register(context: Apollo) {
     this.context = context;
   }
 
@@ -48,11 +48,11 @@ class CSSRender implements ApolloPlugin {
     this.options.render = false;
   }
 
-  public get cursorElement() : Element | null {
+  public get cursorElement(): Element | null {
     return this.options.cursor;
   }
 
-  public get boundings() : Partial<DOMRect> {
+  public get boundings(): Partial<DOMRect> {
     return this.cursorBounding;
   }
 }

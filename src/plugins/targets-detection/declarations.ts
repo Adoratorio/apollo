@@ -5,23 +5,23 @@ export const VISIBILITY_CHECK = {
 }
 
 export interface TargetDescriptor {
-  id : string,
-  elements : Array<ApolloHTMLElement>,
-  offset : Vec2,
-  callback : Function,
-  checkVisibility : string,
+  id: string,
+  elements: Array<ApolloHTMLElement>,
+  offset: Vec2,
+  callback: Function,
+  checkVisibility: string,
 }
 
 export interface ApolloHTMLElement extends HTMLElement {
-  _apolloId : string,
+  _apolloId: string,
 }
 
 export interface Vec2 {
-  x : number,
-  y : number,
+  x: number,
+  y: number,
 }
 
 export interface TargetsDetectionOptions {
-  targets : Array<TargetDescriptor>,
-  emitGlobal : boolean,
+  targets: Array<TargetDescriptor>,
+  emitGlobal: boolean,
 }

@@ -1,5 +1,5 @@
 export interface CSSRenderOptions {
-  cursor : HTMLElement | null,
-  precision : number,
-  render : boolean,
+  cursor: HTMLElement | null,
+  precision: number,
+  render: boolean,
 }

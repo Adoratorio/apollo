@@ -11,26 +11,26 @@ import { createProp } from './utils';
 class Apollo {
   static EASING = Easings;
 
-  private options : ApolloOptions;
-  private mousePosition : Vec2;
-  private mouseRenderPosition : Vec2;
-  private _trackMouse : boolean;
-  private cursorPosition : Vec2;
-  private cursorPositionPrev : Vec2 = { x: 0, y: 0 };
-  private _velocity : Vec2 = { x: 0, y: 0 };
-  private _direction : Vec2 = { x: 0, y: 0 };
-  private engine : Aion;
-  private frameHandler : Function;
-  private cursorXTimeline : Timeline;
-  private cursorYTimeline : Timeline;
-  private aionId : string = `apollo-frame-${performance.now()}`;
-  private plugins : Array<ApolloPlugin> = [];
-  private internalId : number = 0;
+  private options: ApolloOptions;
+  private mousePosition: Vec2;
+  private mouseRenderPosition: Vec2;
+  private _trackMouse: boolean;
+  private cursorPosition: Vec2;
+  private cursorPositionPrev: Vec2 = { x: 0, y: 0 };
+  private _velocity: Vec2 = { x: 0, y: 0 };
+  private _direction: Vec2 = { x: 0, y: 0 };
+  private engine: Aion;
+  private frameHandler: Function;
+  private cursorXTimeline: Timeline;
+  private cursorYTimeline: Timeline;
+  private aionId: string = `apollo-frame-${performance.now()}`;
+  private plugins: Array<ApolloPlugin> = [];
+  private internalId: number = 0;
 
-  constructor(options : Partial<ApolloOptions>) {
+  constructor(options: Partial<ApolloOptions>) {
     createProp(); // Will add '_apolloId' to HTMLElement prototype
 
-    const defaults : ApolloOptions = {
+    const defaults: ApolloOptions = {
       easing: {
         mode: Apollo.EASING.CUBIC,
         duration: 1000,
@@ -68,14 +68,14 @@ class Apollo {
       this.engine.start();
     }
 
-    this.frameHandler = (delta : number) => { this.frame(delta); };
+    this.frameHandler = (delta: number) => { this.frame(delta); };
     this.engine.add(this.frameHandler, this.aionId);
     this.bindEvents();
 
     this._trackMouse = true;
   }
 
-  private frame = (delta : number) : void => {
+  private frame = (delta: number): void => {
     // Call PLUGIN preFrame
     this.plugins.forEach((plugin) => plugin.preFrame && plugin.preFrame(this, delta));
 
@@ -84,8 +84,8 @@ class Apollo {
     this.cursorYTimeline.final = this.mouseRenderPosition.y;
   
     // Calculate current timeline value
-    const deltaT : number = Math.min(Math.max(delta, 0), this.options.easing.duration);
-    const time : number = this.options.easing.mode(deltaT / this.options.easing.duration);
+    const deltaT: number = Math.min(Math.max(delta, 0), this.options.easing.duration);
+    const time: number = this.options.easing.mode(deltaT / this.options.easing.duration);
 
     this.cursorXTimeline.current = this.cursorXTimeline.initial + (time * (this.cursorXTimeline.final - this.cursorXTimeline.initial));
     this.cursorYTimeline.current = this.cursorYTimeline.initial + (time * (this.cursorYTimeline.final - this.cursorYTimeline.initial));
@@ -130,7 +130,7 @@ class Apollo {
     }
   }
 
-  private mouseMove = (event : MouseEvent) : void => {
+  private mouseMove = (event: MouseEvent): void => {
     this.mousePosition = {
       x: event.clientX,
       y: event.clientY,
@@ -139,7 +139,7 @@ class Apollo {
     this.mouseRenderPosition = this.mousePosition;
   }
 
-  private touchMove = (event : TouchEvent) : void => {
+  private touchMove = (event: TouchEvent): void => {
     this.mousePosition = {
       x: event.touches[0]?.clientX || 0,
       y: event.touches[0]?.clientY || 0,
@@ -148,13 +148,13 @@ class Apollo {
     this.mouseRenderPosition = this.mousePosition;
   }
 
-  private register (plugin : ApolloPlugin, id : string) {
+  private register (plugin: ApolloPlugin, id: string) {
     if (typeof plugin.register === 'function') plugin.register(this);
     plugin.id = id;
     this.plugins.push(plugin);
   }
 
-  public registerPlugin(plugin : ApolloPlugin, id? : string) : string {
+  public registerPlugin(plugin: ApolloPlugin, id?: string): string {
     if (!plugin.name) {
       throw new Error('Plugin must have a name property');
     }
@@ -168,7 +168,7 @@ class Apollo {
     return pluginId;
   }
 
-  public unregisterPlugin(id : string) : boolean {
+  public unregisterPlugin(id: string): boolean {
     const foundIndex = this.plugins.findIndex((p) => p.id === id);
     if (foundIndex === -1) return false;
     const found = this.plugins[foundIndex];
@@ -177,8 +177,8 @@ class Apollo {
     return true;
   }
 
-  public registerPlugins(plugins : Array<ApolloPlugin>, ids : Array<string>) : Array<string> {
-    const is : Array<string> = [];
+  public registerPlugins(plugins: Array<ApolloPlugin>, ids: Array<string>): Array<string> {
+    const is: Array<string> = [];
     plugins.forEach((plugin, index) => {
       is.push(this.registerPlugin(plugin, ids[index]));
     });
@@ -204,15 +204,15 @@ class Apollo {
     this.plugins = [];
   }
 
-  public getPlugin(name : string) : ApolloPlugin | undefined {
+  public getPlugin(name: string): ApolloPlugin | undefined {
     return this.plugins.find(plugin => plugin.name === name);
   }
 
-  public get trackMouse() : boolean {
+  public get trackMouse(): boolean {
     return this._trackMouse;
   }
 
-  public set trackMouse(value : boolean) {
+  public set trackMouse(value: boolean) {
     this._trackMouse = value;
   }
 
@@ -224,37 +224,37 @@ class Apollo {
     this._trackMouse = false;
   }
 
-  public get coords() : Vec2 {
+  public get coords(): Vec2 {
     return this.cursorPosition;
   }
 
-  public set coords(coords : Vec2) {
+  public set coords(coords: Vec2) {
     this.mouseRenderPosition = coords;
   }
 
-  public get normalizedCoords() : Vec2 {
+  public get normalizedCoords(): Vec2 {
     return {
       x: ((this.cursorPosition.x / window.innerWidth) * 2) - 1,
       y: ((this.cursorPosition.y / window.innerHeight) * 2) - 1,
     }
   }
 
-  public get mouse() : Vec2 {
+  public get mouse(): Vec2 {
     return this.mousePosition;
   }
 
-  public get normalizedMouse() : Vec2 {
+  public get normalizedMouse(): Vec2 {
     return {
       x: ((this.mousePosition.x / window.innerWidth) * 2) - 1,
       y: ((this.mousePosition.y / window.innerHeight) * 2) - 1,
     }
   }
 
-  public get velocity() : Vec2 {
+  public get velocity(): Vec2 {
     return this._velocity;
   }
 
-  public get direction() : Vec2 {
+  public get direction(): Vec2 {
     return this._direction;
   }
 }
