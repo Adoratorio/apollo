@@ -16,14 +16,17 @@ class SingleTarget {
     this.calculateBoundings();
   }
   
+  // @ts-ignore
   frame(delta: number) {
     this.calculateBoundings();
   }
   
+  // @ts-ignore
   render(delta: number) {
     
   }
   
+  // @ts-ignore
   postRender(delta: number) {
     
   }

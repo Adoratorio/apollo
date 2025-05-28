@@ -42,6 +42,7 @@ class TargetsDetection implements ApolloPlugin {
     this.context = context;
   }
 
+  // @ts-ignore
   public preFrame(context: Apollo, delta: number) {
     this._targets.forEach(target => target.frame(delta));
 
@@ -101,10 +102,12 @@ class TargetsDetection implements ApolloPlugin {
     }
   }
 
+  // @ts-ignore
   public render(context: Apollo, delta: number) {
     this._targets.forEach(target => target.render(delta));
   }
 
+  // @ts-ignore
   public afterRender(context: Apollo, delta: number) {
     this._targets.forEach(target => target.postRender(delta));
   }
