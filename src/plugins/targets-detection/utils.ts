@@ -1,7 +1,7 @@
 import { Vec2, VISIBILITY_CHECK } from "./declarations";
 import SingleTarget from "./SingleTarget";
 
-export function isInRect(point : Vec2, rect : DOMRect, offset : Vec2 = { x: 0, y: 0 }) {
+export function isInRect(point: Vec2, rect: DOMRect, offset: Vec2 = { x: 0, y: 0 }) {
   return (
     point.x >= (rect.left - offset.x) 
     && point.x <= (rect.right + offset.x)
@@ -34,8 +34,8 @@ export function isVisible(target: SingleTarget) {
   return false;
 }
 
-export function emitEvent(id : string, payload : any) {
-  const init : CustomEventInit = { };
+export function emitEvent(id: string, payload: any) {
+  const init: CustomEventInit = { };
   init.detail = payload;
   const customEvent = new CustomEvent(id, init);
   window.dispatchEvent(customEvent);
