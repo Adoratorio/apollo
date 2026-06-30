@@ -24,13 +24,16 @@
 import TargetsDetection from '@adoratorio/apollo/plugins/targets-detection';
 
 apollo.registerPlugin(new TargetsDetection({
-  id: 'td-test',
-  elements: Array.from(document.querySelectorAll('[data-apollo-hover]')),
-  offset: { x: 10, y: 5 },
-  callback: (target, type) => {
-    console.log(target, type);
-  },
-  ckeckVisibility: TargetDetection.VISIBILITY_CHECK.PARTIAL,
+  targets: [{
+    id: 'td-test',
+      elements: Array.from(document.querySelectorAll('[data-apollo-hover]')),
+      offset: { x: 10, y: 5 },
+      callback: (target, type) => {
+        console.log(target, type);
+      },
+      ckeckVisibility: TargetDetection.VISIBILITY_CHECK.PARTIAL,
+  }],
+  emitGlobal: false,
 }));
 ```
 
