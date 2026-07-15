@@ -20,7 +20,7 @@ class Apollo {
   private _velocity: Vec2 = { x: 0, y: 0 };
   private _direction: Vec2 = { x: 0, y: 0 };
   private engine: Aion;
-  private frameHandler: Function;
+  private frameHandler: (delta: number) => void;
   private cursorXTimeline: Timeline;
   private cursorYTimeline: Timeline;
   private aionId: string = `apollo-frame-${performance.now()}`;
@@ -64,7 +64,7 @@ class Apollo {
     if (this.options.aion !== null) {
       this.engine = this.options.aion;
     } else {
-      this.engine = new Aion();
+      this.engine = new Aion({});
       this.engine.start();
     }
 
@@ -96,9 +96,10 @@ class Apollo {
     };
 
     // Calculate velocity and direction
+    const dt = delta || 1;
     this._velocity = {
-      x: (this.cursorPosition.x - this.cursorPositionPrev.x) / delta,
-      y: (this.cursorPosition.y - this.cursorPositionPrev.y) / delta,
+      x: (this.cursorPosition.x - this.cursorPositionPrev.x) / dt,
+      y: (this.cursorPosition.y - this.cursorPositionPrev.y) / dt,
     };
 
     this._direction = {
