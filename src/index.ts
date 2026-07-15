@@ -1,15 +1,24 @@
-import Aion from '@adoratorio/aion';
+import AionClass from '@adoratorio/aion';
 import {
-  ApolloOptions,
-  Vec2,
-  Timeline,
-  ApolloPlugin,
-} from './declarations';
-import Easings from './easing';
-import { createProp } from './utils';
+  type Aion,
+  type ApolloOptions,
+  type ApolloPlugin,
+  type Timeline,
+  type Vec2,
+} from './declarations.ts';
+import Easings from './easing.ts';
+import { createProp } from './utils.ts';
+
+export { default as EASING, type EasingFunction } from './easing.ts';
+export type { Aion, ApolloOptions, ApolloPlugin, Easing, Timeline, Vec2 } from './declarations.ts';
+
+// `@adoratorio/aion` ships legacy CJS-style typings: remap the default import
+// to the class constructor type (at runtime bundlers resolve the real ESM
+// default export, which IS the class).
+const AionEngine = AionClass as unknown as (typeof AionClass)['default'];
 
 class Apollo {
-  static EASING = Easings;
+  static readonly EASING: typeof Easings = Easings;
 
   private options: ApolloOptions;
   private mousePosition: Vec2;
@@ -23,9 +32,9 @@ class Apollo {
   private frameHandler: (delta: number) => void;
   private cursorXTimeline: Timeline;
   private cursorYTimeline: Timeline;
-  private aionId: string = `apollo-frame-${performance.now()}`;
-  private plugins: Array<ApolloPlugin> = [];
-  private internalId: number = 0;
+  private aionId = `apollo-frame-${performance.now()}`;
+  private plugins: ApolloPlugin[] = [];
+  private internalId = 0;
 
   constructor(options: Partial<ApolloOptions>) {
     createProp(); // Will add '_apolloId' to HTMLElement prototype
@@ -38,8 +47,8 @@ class Apollo {
       initialPosition: { x: 0, y: 0 },
       detectTouch: false,
       aion: null,
-    }
-    this.options = {...defaults, ...options};
+    };
+    this.options = { ...defaults, ...options };
 
     // Set the initial mouse position
     this.mousePosition = this.options.initialPosition;
@@ -64,11 +73,13 @@ class Apollo {
     if (this.options.aion !== null) {
       this.engine = this.options.aion;
     } else {
-      this.engine = new Aion({});
+      this.engine = new AionEngine({});
       this.engine.start();
     }
 
-    this.frameHandler = (delta: number) => { this.frame(delta); };
+    this.frameHandler = (delta: number): void => {
+      this.frame(delta);
+    };
     this.engine.add(this.frameHandler, this.aionId);
     this.bindEvents();
 
@@ -77,25 +88,29 @@ class Apollo {
 
   private frame = (delta: number): void => {
     // Call PLUGIN preFrame
-    this.plugins.forEach((plugin) => plugin.preFrame && plugin.preFrame(this, delta));
+    this.plugins.forEach((plugin) => plugin.preFrame?.(this, delta));
 
     // Get the new final position to go to
     this.cursorXTimeline.final = this.mouseRenderPosition.x;
     this.cursorYTimeline.final = this.mouseRenderPosition.y;
-  
+
     // Calculate current timeline value
     const deltaT: number = Math.min(Math.max(delta, 0), this.options.easing.duration);
     const time: number = this.options.easing.mode(deltaT / this.options.easing.duration);
 
-    this.cursorXTimeline.current = this.cursorXTimeline.initial + (time * (this.cursorXTimeline.final - this.cursorXTimeline.initial));
-    this.cursorYTimeline.current = this.cursorYTimeline.initial + (time * (this.cursorYTimeline.final - this.cursorYTimeline.initial));
+    this.cursorXTimeline.current =
+      this.cursorXTimeline.initial +
+      time * (this.cursorXTimeline.final - this.cursorXTimeline.initial);
+    this.cursorYTimeline.current =
+      this.cursorYTimeline.initial +
+      time * (this.cursorYTimeline.final - this.cursorYTimeline.initial);
 
     this.cursorPosition = {
       x: this.cursorXTimeline.current,
       y: this.cursorYTimeline.current,
     };
 
-    // Calculate velocity and direction
+    // Calculate velocity and direction (guard delta = 0 to avoid NaN/Infinity)
     const dt = delta || 1;
     this._velocity = {
       x: (this.cursorPosition.x - this.cursorPositionPrev.x) / dt,
@@ -111,7 +126,7 @@ class Apollo {
     this.velocity.y = Math.abs(this._velocity.y);
 
     // Call PLUGIN frame callback before resetting the timeline and values
-    this.plugins.forEach((plugin) => plugin.frame && plugin.frame(this, delta));
+    this.plugins.forEach((plugin) => plugin.frame?.(this, delta));
 
     this.cursorXTimeline.initial = this.cursorXTimeline.current;
     this.cursorYTimeline.initial = this.cursorYTimeline.current;
@@ -119,10 +134,10 @@ class Apollo {
     this.cursorPositionPrev = this.cursorPosition;
 
     // Call PLUGIN afterFrame
-    this.plugins.forEach((plugin) => plugin.afterFrame && plugin.afterFrame(this, delta));
-  }
+    this.plugins.forEach((plugin) => plugin.afterFrame?.(this, delta));
+  };
 
-  private bindEvents() {
+  private bindEvents(): void {
     document.body.addEventListener('pointermove', this.mouseMove, { passive: true });
 
     if (this.options.detectTouch) {
@@ -131,26 +146,34 @@ class Apollo {
     }
   }
 
-  private mouseMove = (event: MouseEvent): void => {
+  private mouseMove = (event: Event): void => {
+    const mouseEvent = event as MouseEvent;
     this.mousePosition = {
-      x: event.clientX,
-      y: event.clientY,
+      x: mouseEvent.clientX,
+      y: mouseEvent.clientY,
     };
-    if (!this._trackMouse) return;
+    if (!this._trackMouse) {
+      return;
+    }
     this.mouseRenderPosition = this.mousePosition;
-  }
+  };
 
-  private touchMove = (event: TouchEvent): void => {
+  private touchMove = (event: Event): void => {
+    const touchEvent = event as TouchEvent;
     this.mousePosition = {
-      x: event.touches[0]?.clientX || 0,
-      y: event.touches[0]?.clientY || 0,
+      x: touchEvent.touches[0]?.clientX || 0,
+      y: touchEvent.touches[0]?.clientY || 0,
     };
-    if (!this._trackMouse) return;
+    if (!this._trackMouse) {
+      return;
+    }
     this.mouseRenderPosition = this.mousePosition;
-  }
+  };
 
-  private register (plugin: ApolloPlugin, id: string) {
-    if (typeof plugin.register === 'function') plugin.register(this);
+  private register(plugin: ApolloPlugin, id: string): void {
+    if (typeof plugin.register === 'function') {
+      plugin.register(this);
+    }
     plugin.id = id;
     this.plugins.push(plugin);
   }
@@ -160,7 +183,7 @@ class Apollo {
       throw new Error('Plugin must have a name property');
     }
 
-    if (this.plugins.some(p => p.name === plugin.name)) {
+    if (this.plugins.some((p) => p.name === plugin.name)) {
       throw new Error(`Plugin with name "${plugin.name}" is already registered`);
     }
 
@@ -171,15 +194,19 @@ class Apollo {
 
   public unregisterPlugin(id: string): boolean {
     const foundIndex = this.plugins.findIndex((p) => p.id === id);
-    if (foundIndex === -1) return false;
+    if (foundIndex === -1) {
+      return false;
+    }
     const found = this.plugins[foundIndex];
-    if (found && typeof found.destroy === 'function') found.destroy();
+    if (found && typeof found.destroy === 'function') {
+      found.destroy();
+    }
     this.plugins.splice(foundIndex, 1);
     return true;
   }
 
-  public registerPlugins(plugins: Array<ApolloPlugin>, ids: Array<string>): Array<string> {
-    const is: Array<string> = [];
+  public registerPlugins(plugins: ApolloPlugin[], ids: string[]): string[] {
+    const is: string[] = [];
     plugins.forEach((plugin, index) => {
       is.push(this.registerPlugin(plugin, ids[index]));
     });
@@ -187,7 +214,7 @@ class Apollo {
     return is;
   }
 
-  private unbindEvents() {
+  private unbindEvents(): void {
     document.body.removeEventListener('pointermove', this.mouseMove);
 
     if (this.options.detectTouch) {
@@ -196,17 +223,19 @@ class Apollo {
     }
   }
 
-  public destroy() {
+  public destroy(): void {
     this.unbindEvents();
     this.engine.remove(this.aionId);
-    this.plugins.forEach(plugin => {
-      if (plugin.destroy) plugin.destroy();
+    this.plugins.forEach((plugin) => {
+      if (plugin.destroy) {
+        plugin.destroy();
+      }
     });
     this.plugins = [];
   }
 
   public getPlugin(name: string): ApolloPlugin | undefined {
-    return this.plugins.find(plugin => plugin.name === name);
+    return this.plugins.find((plugin) => plugin.name === name);
   }
 
   public get trackMouse(): boolean {
@@ -217,11 +246,11 @@ class Apollo {
     this._trackMouse = value;
   }
 
-  public startMouseTracking() {
+  public startMouseTracking(): void {
     this._trackMouse = true;
   }
 
-  public stopMouseTracking() {
+  public stopMouseTracking(): void {
     this._trackMouse = false;
   }
 
@@ -235,9 +264,9 @@ class Apollo {
 
   public get normalizedCoords(): Vec2 {
     return {
-      x: ((this.cursorPosition.x / window.innerWidth) * 2) - 1,
-      y: ((this.cursorPosition.y / window.innerHeight) * 2) - 1,
-    }
+      x: (this.cursorPosition.x / window.innerWidth) * 2 - 1,
+      y: (this.cursorPosition.y / window.innerHeight) * 2 - 1,
+    };
   }
 
   public get mouse(): Vec2 {
@@ -246,9 +275,9 @@ class Apollo {
 
   public get normalizedMouse(): Vec2 {
     return {
-      x: ((this.mousePosition.x / window.innerWidth) * 2) - 1,
-      y: ((this.mousePosition.y / window.innerHeight) * 2) - 1,
-    }
+      x: (this.mousePosition.x / window.innerWidth) * 2 - 1,
+      y: (this.mousePosition.y / window.innerHeight) * 2 - 1,
+    };
   }
 
   public get velocity(): Vec2 {

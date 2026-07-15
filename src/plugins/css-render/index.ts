@@ -1,37 +1,45 @@
-import Apollo from "../..";
-import { ApolloPlugin } from "../../declarations";
-import { CSSRenderOptions } from "./declarations";
+import { type ApolloPlugin } from '../../declarations.ts';
+import type Apollo from '../../index.ts';
+import { type CSSRenderOptions } from './declarations.ts';
 
 class CSSRender implements ApolloPlugin {
   private context: Apollo | null = null;
   private options: CSSRenderOptions;
   private cursorBounding: DOMRect;
-  
-  public name: string = 'CSSRender';
+
+  public name = 'CSSRender';
 
   constructor(options: Partial<CSSRenderOptions>) {
     const defaults: CSSRenderOptions = {
       cursor: document.querySelector('.apollo__cursor') as HTMLElement,
       precision: 4,
       render: true,
-    }
+    };
 
     this.options = { ...defaults, ...options };
 
-    this.cursorBounding = (this.cursorElement as HTMLElement).getBoundingClientRect() as DOMRect;
+    this.cursorBounding = (this.cursorElement as HTMLElement).getBoundingClientRect();
   }
-  
-  public register(context: Apollo) {
+
+  public register(context: Apollo): void {
     this.context = context;
   }
 
-  public frame() {
-    if (!this.context) return;
-    if (!this.options.render) return;
-    
+  public frame(): void {
+    if (!this.context) {
+      return;
+    }
+    if (!this.options.render) {
+      return;
+    }
+
     const position = {
-      x: parseFloat((this.context.coords.x - (this.cursorBounding.width / 2)).toFixed(this.options.precision)),
-      y: parseFloat((this.context.coords.y - (this.cursorBounding.height / 2)).toFixed(this.options.precision)),
+      x: parseFloat(
+        (this.context.coords.x - this.cursorBounding.width / 2).toFixed(this.options.precision),
+      ),
+      y: parseFloat(
+        (this.context.coords.y - this.cursorBounding.height / 2).toFixed(this.options.precision),
+      ),
     };
 
     if (this.cursorElement !== null) {
@@ -40,11 +48,11 @@ class CSSRender implements ApolloPlugin {
     }
   }
 
-  public startRender() {
+  public startRender(): void {
     this.options.render = true;
   }
 
-  public stopRender() {
+  public stopRender(): void {
     this.options.render = false;
   }
 

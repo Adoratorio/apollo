@@ -7,12 +7,12 @@
 
 | parameter | type | default | description |
 | :- | :-: | :-: | :- |
-| cursor | `HTMLElement` | `null` | The DOM element on which the renderer will apply the style |
+| cursor | `HTMLElement \| null` | `document.querySelector('.apollo__cursor')` | The DOM element on which the renderer will apply the style |
 | precision | `number` | `4` | The number of digits after the iteger part to round to when rendering |
 | render | `boolean` | `true` | If the style is currently applied every frame or not, use to pause or play rendering |
 
 ```javascript
-import CSSRender from '@adoratorio/apollo/plugins/css-render';
+import { CSSRender } from '@adoratorio/apollo/plugins';
 
 apollo.registerPlugin(new CSSRender({
   cursor: document.querySelector('.cursor'),
@@ -40,9 +40,9 @@ CSSRenderInstance.stopRender()
 ### Instance Getters
 
 #### cursorElement
-• Type: `HTMLElement`
+• Type: `Element | null`
 Get back the DOM node associated with the style rendering
 
 #### boundings
-• Type: `DOMRect`
+• Type: `Partial<DOMRect>`
 Get the actual boundings of the cursor element. Used internally to calculte offset in order to center the cursor to the mouse.

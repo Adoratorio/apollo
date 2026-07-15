@@ -18,10 +18,10 @@
 | elements | `Array<HTMLElements>` | `[]` | The list of DOM nodes to watch |
 | offset | `Vec2` | `{ x: 0, y: 0 }` | The virtual offset around the element in both direction included when triggering events |
 | callback | `Function` | `(target, type) => { }` | The function called on each event, will have the target and the event type as params  |
-| checkVisibility | `TargetDetection.VISIBILITY_CHECK.NONE \| TargetDetection.VISIBILITY_CHECK.FULL \| TargetDetection.VISIBILITY_CHECK.PARTIAL` | `TargetDetection.VISIBILITY_CHECK.NONE` | If to check the full or partial visibility of the element before firing events or not checking at all  |
+| checkVisibility | `TargetsDetection.VISIBILITY_CHECK.NONE \| TargetsDetection.VISIBILITY_CHECK.FULL \| TargetsDetection.VISIBILITY_CHECK.PARTIAL` | `TargetsDetection.VISIBILITY_CHECK.NONE` | If to check the full or partial visibility of the element before firing events or not checking at all  |
 
 ```javascript
-import TargetsDetection from '@adoratorio/apollo/plugins/targets-detection';
+import { TargetsDetection } from '@adoratorio/apollo/plugins';
 
 apollo.registerPlugin(new TargetsDetection({
   targets: [{
@@ -31,7 +31,7 @@ apollo.registerPlugin(new TargetsDetection({
       callback: (target, type) => {
         console.log(target, type);
       },
-      ckeckVisibility: TargetDetection.VISIBILITY_CHECK.PARTIAL,
+      checkVisibility: TargetsDetection.VISIBILITY_CHECK.PARTIAL,
   }],
   emitGlobal: false,
 }));
@@ -39,19 +39,19 @@ apollo.registerPlugin(new TargetsDetection({
 
 ## APIs
 
-Targets are the interaction core, having callback and event on hover and leave of the element, you can define targets passing target descriptors to the constructor or using the dedicated method
+Targets are the interaction core, having callback and event on hover and leave of the element, you can define targets passing target descriptors to the constructor or using the dedicated method on the plugin instance
 ```typescript
-apolloInstance.addTarget(targets Array<TargetDescriptor>)
+targetsDetectionInstance.addTarget(target : TargetDescriptor)
 ```
 Anytime an element in target is hovered or leaved the callback is fired and a global event is emitted (if the emitGlobal option is set to true).
 Emitted events are
 
 |enumerator|name|when|
 |:---|:---|:---|
-|TargetsDetaction.EVENTS.MOUSE_ENTER|`apollo-mouse-enter`|When the mouse pointer enter a target|
-|TargetsDetaction.EVENTS.CURSOR_ENTER|`apollo-cursor-enter`|When the cursor element enter a target|
-|TargetsDetaction.EVENTS.MOUSE_LEAVE|`apollo-mouse-leave`|When the mouse pointer leave a target|
-|TargetsDetaction.EVENTS.CURSOR_LEAVE|`apollo-cursor-leave`|When the cursor element enter a target|
+|TargetsDetection.EVENTS.MOUSE_ENTER|`apollo-mouse-enter`|When the mouse pointer enter a target|
+|TargetsDetection.EVENTS.CURSOR_ENTER|`apollo-cursor-enter`|When the cursor element enter a target|
+|TargetsDetection.EVENTS.MOUSE_LEAVE|`apollo-mouse-leave`|When the mouse pointer leave a target|
+|TargetsDetection.EVENTS.CURSOR_LEAVE|`apollo-cursor-leave`|When the cursor element leave a target|
 
 ## Public methods
 
@@ -60,7 +60,7 @@ Emitted events are
 Add a full target passing a new target descriptor
 
 ```typescript
-apollo.addTarget(target : TargetDescriptor) : undefined
+targetsDetectionInstance.addTarget(target : TargetDescriptor) : undefined
 ```
 
 **Parameters**
@@ -74,7 +74,7 @@ apollo.addTarget(target : TargetDescriptor) : undefined
 Remove a specific target using his `id`
 
 ```typescript
-apollo.removeTarget(id : string) : undefined
+targetsDetectionInstance.removeTarget(id : string) : undefined
 ```
 
 **Parameters**
@@ -88,7 +88,7 @@ apollo.removeTarget(id : string) : undefined
 Remove a specific element from his target group
 
 ```typescript
-apollo.pullFromTarget(element : HTMLElement) : undefined
+targetsDetectionInstance.pullFromTarget(element : HTMLElement) : undefined
 ```
 
 **Parameters**

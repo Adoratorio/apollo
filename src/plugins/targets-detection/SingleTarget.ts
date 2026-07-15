@@ -1,4 +1,4 @@
-import { TargetDescriptor, ApolloHTMLElement } from "./declarations";
+import { type ApolloHTMLElement, type TargetDescriptor } from './declarations.ts';
 
 class SingleTarget {
   element: ApolloHTMLElement;
@@ -12,40 +12,39 @@ class SingleTarget {
     this.descriptor = descriptor;
     this.id = `${this.descriptor.id}-${id}`;
     this.element._apolloId = this.id;
-    if (typeof this.descriptor.callback !== 'function') this.descriptor.callback = () => {};
+    if (typeof this.descriptor.callback !== 'function') {
+      this.descriptor.callback = () => {};
+    }
     this.calculateBoundings();
   }
-  
-  // @ts-ignore
-  frame(delta: number) {
+
+  frame(_delta: number): void {
     this.calculateBoundings();
   }
-  
-  // @ts-ignore
-  render(delta: number) {
-    
-  }
-  
-  // @ts-ignore
-  postRender(delta: number) {
-    
-  }
-  
-  calculateBoundings() {
-    this.boundingRect = this.element.getBoundingClientRect() as DOMRect;
+
+  render(_delta: number): void {}
+
+  postRender(_delta: number): void {}
+
+  calculateBoundings(): void {
+    this.boundingRect = this.element.getBoundingClientRect();
     let offsetX = 0;
     let offsetY = 0;
-    if (this.descriptor.offset && this.descriptor.offset.x) offsetX = this.descriptor.offset.x;
-    if (this.descriptor.offset && this.descriptor.offset.y) offsetY = this.descriptor.offset.y;
+    if (this.descriptor.offset && this.descriptor.offset.x) {
+      offsetX = this.descriptor.offset.x;
+    }
+    if (this.descriptor.offset && this.descriptor.offset.y) {
+      offsetY = this.descriptor.offset.y;
+    }
 
     this.boundings = {
       top: this.boundingRect.top - offsetY,
       bottom: this.boundingRect.bottom + offsetY,
       left: this.boundingRect.left - offsetX,
       right: this.boundingRect.right + offsetX,
-      width: this.boundingRect.width + (offsetX * 2),
-      height: this.boundingRect.height + (offsetY * 2),
-    }
+      width: this.boundingRect.width + offsetX * 2,
+      height: this.boundingRect.height + offsetY * 2,
+    };
   }
 }
 
