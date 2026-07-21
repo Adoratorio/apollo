@@ -34,6 +34,10 @@
     "check": "pnpm run typecheck && pnpm run lint && pnpm run format:check",
     "prepublishOnly": "pnpm run check && pnpm run build"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adoratorio/apollo.git"
+  },
   "keywords": [
     "mouse",
     "cursor",
@@ -43,20 +47,24 @@
     "apollo",
     "adoratorio"
   ],
-  "author": "Adoratorio <contact@adoratorio.com>",
+  "author": "Adoratorio Studio <contact@adoratorio.com>",
   "contributors": [
     "Andrea Gottardi <andrea@adoratorio.com>",
     "Daniele Borra <daniele@adoratorio.com>",
     "Tommaso Algozzino <tommaso@adoratorio.com>"
   ],
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Adoratorio/apollo/issues"
+  },
+  "homepage": "https://github.com/Adoratorio/apollo#readme",
   "packageManager": "pnpm@11.12.0",
   "dependencies": {
-    "@adoratorio/aion": "^0.4.3"
+    "@adoratorio/aion": "^1.0.0"
   },
   "devDependencies": {
-    "oxfmt": "^0.58.0",
-    "oxlint": "^1.73.0",
+    "oxfmt": "^0.59.0",
+    "oxlint": "^1.74.0",
     "typescript": "^7.0.2"
   }
 }
