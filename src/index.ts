@@ -36,6 +36,7 @@ class Apollo {
       initialPosition: { x: 0, y: 0 },
       detectTouch: false,
       aion: null,
+      debug: false,
     };
     this.#options = { ...defaults, ...options };
 
@@ -62,7 +63,7 @@ class Apollo {
     if (this.#options.aion !== null) {
       this.#engine = this.#options.aion;
     } else {
-      this.#engine = new AionEngine({});
+      this.#engine = new AionEngine({ debug: this.#options.debug });
       this.#engine.start();
     }
 
@@ -71,6 +72,12 @@ class Apollo {
     this.#bindEvents();
 
     this.#trackMouse = true;
+  }
+
+  #debugWarn(message: string): void {
+    if (this.#options.debug) {
+      console.warn(`[Apollo] ${message}`);
+    }
   }
 
   #frame = (delta: number): void => {
@@ -168,11 +175,11 @@ class Apollo {
 
   public registerPlugin(plugin: ApolloPlugin, id?: string): string {
     if (!plugin.name) {
-      throw new Error('Plugin must have a name property');
+      throw new Error('[Apollo] Plugin must have a name property');
     }
 
     if (this.#plugins.some((p) => p.name === plugin.name)) {
-      throw new Error(`Plugin with name "${plugin.name}" is already registered`);
+      throw new Error(`[Apollo] Plugin with name "${plugin.name}" is already registered`);
     }
 
     const pluginId = id || `apollo-plugin-${this.#internalId++}`;
@@ -183,6 +190,7 @@ class Apollo {
   public unregisterPlugin(id: string): boolean {
     const foundIndex = this.#plugins.findIndex((p) => p.id === id);
     if (foundIndex === -1) {
+      this.#debugWarn(`No plugin registered with id "${id}"`);
       return false;
     }
     const found = this.#plugins[foundIndex];

@@ -19,6 +19,7 @@ export interface ApolloOptions {
   initialPosition: Vec2;
   detectTouch: boolean;
   aion: Aion | null;
+  debug: boolean;
 }
 
 export interface Timeline {
