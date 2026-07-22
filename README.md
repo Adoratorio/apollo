@@ -1,138 +1,91 @@
 # Apollo
 
-An engine to create custom cursor animations and effects.
+An engine to create custom cursor animations, magnetism, and hover effects.
 
 ## Installation
-Apollo s written in typescript and available as npm package with the alongside types definitions. So install as always
 
 ```bash
-# Install package
 npm install @adoratorio/apollo
 ```
+
 ## Usage
-Then it can be required or imported as module
 
-```javascript
+This package is ESM-only. Import it as a module:
+
+```typescript
 import Apollo from '@adoratorio/apollo';
-const apollo = new Apollo({ });
-```
-From now on you can instanciate and register plugins to handle the rendering of the amount with different teqniques or to add functionalities. Plugins stucture is explained later.
 
-For the plugins they can also be imported singularly as modules from the plguins folder and then registered using the `registerPlugin` method.
-
-```javascript
-import { CSSRender } from '@/adoratorio/apollo/plugins';
-apollo.registerPlugin(new CSSRender({ /* ... plugin options */ }));
+const apollo = new Apollo({
+  initialPosition: { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+});
 ```
 
-## Available options
-Apollo accept in the constructor an `option` object with the following possible props.
+From here, you can instantiate and register plugins to handle the rendering of the cursor or to add functionalities.
 
-|parameter|type|default|description|
-|:--------|:--:|:-----:|:----------|
-|easing|`Easing`|`{ mode: Apollo.EASING.CUBIC, duration: 1000 }`|An easing object used to describe the cursor element aniamtion|
-|initialPosition|`Vec2`|`{ x: 0, y: 0 }`|A Two components (x, y) vector to determinate the strarting position of the cursor element|
-|detectTouch|boolean|`true`|If the touch events counts as valid interaction to evaluate a new cursor position|
-|aion|`Aion`|`new Aion()`|An `Aion` instance to be used as engine, if not submitted one will be created for you|
-
-## APIs
-
-### Public Methods
-
-### registerPlugin()
-
-Register a plugin inside the current `Apollo` instance. Return a string with the registration id, useful for unregister
 ```typescript
-apollo.registerPlugin(plugin : ApolloPlugin) : string
+import { CSSRender } from '@adoratorio/apollo/plugins';
+
+apollo.registerPlugin(new CSSRender({
+  cursor: document.querySelector('.apollo__cursor')
+}));
 ```
 
-**Parameters**
+### Shipped Plugins
 
-| parameter | required | description |
-|:---|:---:|:---|
-| plugin | `ApolloPlugin` | The instance of the plugin to register |
+The following plugins are shipped from the `@adoratorio/apollo/plugins` entry point:
 
-### registerPlugins()
+| Plugin | Description |
+| :----- | :---------- |
+| [`CSSRender`](src/plugins/css-render/README.md) | Renders the cursor by writing CSS transforms directly on a DOM element. |
+| [`TargetsDetection`](src/plugins/targets-detection/README.md) | Fires callbacks/events when the mouse or cursor enters/leaves designated target elements. |
 
-Register multiple plugins inside the current `Apollo` instance. Return an array of strings with the registration ids in positional corrispondence with the provided plugins array
+## Configuration
+
+Apollo accepts an `options` object with the following properties:
+
+| Parameter | Type | Default | Description |
+| :-------- | :--: | :-----: | :---------- |
+| `easing` | `Easing` | `{ mode: Apollo.EASING.CUBIC, duration: 1000 }` | An easing object used to describe the cursor element animation. |
+| `initialPosition` | `Vec2` | `{ x: 0, y: 0 }` | Starting position of the cursor element. |
+| `detectTouch` | `boolean` | `false` | If touch events count as valid interaction to evaluate a new cursor position. |
+| `aion` | `Aion \| null` | `null` | An `Aion` instance to be used as engine; if left `null` one will be created automatically. |
+| `debug` | `boolean` | `false` | Enable namespaced `console.warn` diagnostics for recoverable issues (contract violations always throw). Forwarded to the internally created `Aion`. |
+
+## Methods
+
+### Plugin Management
+
 ```typescript
-apollo.registerPlugins(plugin : Array<ApolloPlugin>) : Array<string>
+// Register a single plugin (returns the assigned ID)
+apollo.registerPlugin(plugin: ApolloPlugin, id?: string): string
+
+// Unregister a plugin by ID
+apollo.unregisterPlugin(id: string): boolean
+
+// Retrieve a registered plugin by name
+apollo.getPlugin(name: string): ApolloPlugin | undefined
 ```
 
-**Parameters**
+### Instance Management
 
-| parameter | required | description |
-|:---|:---:|:---|
-| plugin | `ApolloPlugin` | The instance of the plugin to register |
-
-### unregisterPlugin()
-
-Remove a plugin from the current `Apollo` instance using the registration id of the plugin. Return `true` if the plugin was found and unregistered
 ```typescript
-apollo.unregisterPlugin(id : string) : boolean
-```
-
-**Parameters**
-
-| parameter | required | description |
-|:---|:---:|:---|
-| plugin | `ApolloPlugin` | The instance of the plugin to register |
-
-### getPlugin()
-
-Get instance of a registerd plugin using his name
-```typescript
-apollo.getPlugin(name : String) : ApolloPlugin | undefined
-```
-
-**Parameters**
-
-| parameter | required | description |
-|:---|:---:|:---|
-| name | `string` | The name of the plugin to retrive |
-
-### startMouseTracking()
-
-Starts the mouse tracking per frame. Same as `apollo.trackMouse = true`.
-```typescript
+// Starts or stops the mouse tracking per frame
 apollo.startMouseTracking();
-```
-
-### stopMouseTracking()
-
-Stops temporarly the mouse tracking per frame. Same as `apollo.trackMouse = false`.
-```typescript
 apollo.stopMouseTracking();
+
+// Tear down the instance and clean up
+apollo.destroy();
 ```
 
-### Instance Properties
+## Properties
 
-The Apollo instance exposes two main properties:
+*   **`coords` (`Vec2`)**: The current smoothed position in screen pixels. Settable.
+*   **`normalizedCoords` (`Vec2`)**: Smoothed position in normalized values (`-1` to `1`).
+*   **`mouse` (`Vec2`)**: Native mouse pointer position in screen pixels.
+*   **`velocity` (`Vec2`)**: Absolute per-axis speed of the cursor since the previous frame.
+*   **`direction` (`Vec2`)**: Movement direction (`-1` or `1` per axis).
+*   **`trackMouse` (`boolean`)**: Get or set the current mouse tracking state.
 
-#### coords 
-• Type: `interface Vec2 { x:number, y:number }`
-With x and y props exposes the current smoothed position in screen pixels, updated frame-by-frame.
+## TypeScript Support
 
-#### normalizedCoords
-• Type: `interface Vec2 { x:number, y:number }`
-With x and y props exposes the current smoothed position in normalized values from `-1` to `1`, updated frame-by-frame.
-
-#### mouse 
-• Type: `interface Vec2 { x:number, y:number }`
-With x and y props exposes the current native mouse pointer position in screen pixels, updated frame-by-frame.
-
-#### normalizedMouse
-• Type: `interface Vec2 { x:number, y:number }`
-With x and y props exposes the current native mouse pointer position in normalized values from `-1` to `1`, updated frame-by-frame.
-
-#### velocity 
-• Type: `interface Vec2 { x:number, y:number }`
-With x and y props exposes the diffrence in time from the previous frame of the smoothed coords (not the mouse) indicating how much they have change in one frame using absolute values, updated frame-by-frame.
-
-#### direction
-• Type: `interface Vec2 { x:number, y:number }`
-Comparing the previous frame and the current one holds the value of the direction the cursor is moving `-1` for right to left and bottom to top, `1` for left to right or top to bottom. Can be multiplied with velocity to have full information about the cursor movement compared to previous frame.
-
-#### trackMouse
-• Type: `boolean`
-Get or set the current mouse tracking state. If `true` the mouse is being tracked and the `coords` and `mouse` are updated respectively. If `false` it will stop recording mouse position (not the frame or the engine itself).
+Apollo is written in TypeScript and exports all necessary types and interfaces (e.g., `ApolloOptions`, `ApolloPlugin`, `Vec2`).
