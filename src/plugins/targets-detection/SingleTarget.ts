@@ -1,35 +1,28 @@
-import { type ApolloHTMLElement, type TargetDescriptor } from './declarations.ts';
+import { type TargetDescriptor } from './types.ts';
 
 class SingleTarget {
-  element: ApolloHTMLElement;
+  element: HTMLElement;
   descriptor: TargetDescriptor;
   id: string;
-  boundingRect: DOMRect = {} as unknown as DOMRect;
-  boundings: Partial<DOMRect> = {} as unknown as DOMRect;
+  boundingRect: DOMRect = new DOMRect();
+  boundings: Partial<DOMRect> = {};
 
-  constructor(element: ApolloHTMLElement, descriptor: TargetDescriptor, id: number) {
+  constructor(element: HTMLElement, descriptor: TargetDescriptor, id: number) {
     this.element = element;
     this.descriptor = descriptor;
     this.id = `${this.descriptor.id}-${id}`;
-    this.element._apolloId = this.id;
+
     if (typeof this.descriptor.callback !== 'function') {
       this.descriptor.callback = () => {};
     }
     this.calculateBoundings();
   }
 
-  frame(_delta: number): void {
-    this.calculateBoundings();
-  }
-
-  render(_delta: number): void {}
-
-  postRender(_delta: number): void {}
-
   calculateBoundings(): void {
     this.boundingRect = this.element.getBoundingClientRect();
     let offsetX = 0;
     let offsetY = 0;
+
     if (this.descriptor.offset && this.descriptor.offset.x) {
       offsetX = this.descriptor.offset.x;
     }

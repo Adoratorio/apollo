@@ -27,9 +27,7 @@ export interface TargetDescriptor {
   checkVisibility: VISIBILITY_CHECK;
 }
 
-export interface ApolloHTMLElement extends HTMLElement {
-  _apolloId: string;
-}
+export type ApolloHTMLElement = HTMLElement;
 
 export interface Vec2 {
   x: number;

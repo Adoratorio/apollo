@@ -1,4 +1,4 @@
-import { VISIBILITY_CHECK, type Vec2 } from './declarations.ts';
+import { VISIBILITY_CHECK, type Vec2 } from './types.ts';
 import type SingleTarget from './SingleTarget.ts';
 
 export function isInRect(point: Vec2, rect: DOMRect, offset: Vec2 = { x: 0, y: 0 }): boolean {

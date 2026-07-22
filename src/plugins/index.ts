@@ -1,7 +1,7 @@
 import CSSRender from './css-render/index.ts';
 import TargetsDetection from './targets-detection/index.ts';
 
-export type { CSSRenderOptions } from './css-render/declarations.ts';
+export type { CSSRenderOptions } from './css-render/types.ts';
 export {
   EVENTS,
   VISIBILITY_CHECK,
@@ -10,7 +10,7 @@ export {
   type TargetDescriptor,
   type TargetsDetectionOptions,
   type Vec2,
-} from './targets-detection/declarations.ts';
+} from './targets-detection/types.ts';
 
 const plugins: {
   CSSRender: typeof CSSRender;
@@ -20,6 +20,8 @@ const plugins: {
   TargetsDetection,
 };
 
-export { CSSRender, TargetsDetection };
+export { default as CSSRender } from './css-render/index.ts';
+export { default as TargetsDetection } from './targets-detection/index.ts';
+export { default as SingleTarget } from './targets-detection/SingleTarget.ts';
 
 export default plugins;

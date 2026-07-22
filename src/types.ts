@@ -1,11 +1,8 @@
-import type AionModule from '@adoratorio/aion';
+import type AionInstance from '@adoratorio/aion';
 import { type EasingFunction } from './easing.ts';
 import type Apollo from './index.ts';
 
-// `@adoratorio/aion` ships legacy CJS-style typings, so under NodeNext the
-// default import is typed as the module namespace: the instance type is
-// re-derived from its `default` member (bundlers resolve the real ESM class).
-export type Aion = InstanceType<(typeof AionModule)['default']>;
+export type Aion = AionInstance;
 
 export interface Easing {
   mode: EasingFunction;
