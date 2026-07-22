@@ -1,6 +1,6 @@
 {
   "name": "@adoratorio/apollo",
-  "version": "3.0.24",
+  "version": "4.0.0",
   "description": "A JS library for custom cursor",
   "type": "module",
   "main": "./dist/index.js",
