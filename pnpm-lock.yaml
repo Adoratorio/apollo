@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adoratorio/aion':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
     devDependencies:
       happy-dom:
         specifier: ^20.14.0
@@ -30,8 +30,8 @@ importers:
 
 packages:
 
-  '@adoratorio/aion@1.0.0':
-    resolution: {integrity: sha512-tpSPiV0PaYunALcnZzUxYcYew61loEz4I90ds8GsqxHM+/GD6jqVFTZlguuA3mbRFOKOKGhoR/JoKdM+cquKpw==}
+  '@adoratorio/aion@1.0.1':
+    resolution: {integrity: sha512-MefYktqtx74lSwfQS9yieNLXGRFwy9sh/VQGdM/0nISYcij0GJfm8ejxQJCVmoP44gDGSY+3SHiYi+tmOeOrUw==}
 
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
@@ -861,7 +861,7 @@ packages:
 
 snapshots:
 
-  '@adoratorio/aion@1.0.0': {}
+  '@adoratorio/aion@1.0.1': {}
 
   '@jridgewell/resolve-uri@3.1.2': {}
 

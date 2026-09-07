@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1
+
+- Require Aion 1.0.1 so consumers receive the frame cleanup and scheduling fixes.
+
 ## 4.0.0
 
 - ESM-only, TypeScript 7 toolchain, `debug` option, unified `[Apollo]` errors; requires `@adoratorio/aion` ^1.

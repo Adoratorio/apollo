@@ -1,6 +1,6 @@
 {
   "name": "@adoratorio/apollo",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "A JS library for custom cursor",
   "type": "module",
   "main": "./dist/index.js",
@@ -68,7 +68,7 @@
   "homepage": "https://github.com/Adoratorio/apollo#readme",
   "packageManager": "pnpm@11.22.0",
   "dependencies": {
-    "@adoratorio/aion": "^1.0.0"
+    "@adoratorio/aion": "^1.0.1"
   },
   "devDependencies": {
     "happy-dom": "^20.14.0",
