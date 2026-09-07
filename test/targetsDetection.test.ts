@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Apollo from '../src/index.ts';
 import { TargetsDetection } from '../src/plugins/index.ts';
 import { createFakeAion } from './fakeAion.ts';
@@ -18,6 +18,19 @@ function rect(left: number, top: number, width: number, height: number): DOMRect
   } as DOMRect;
 }
 
+const instances: Apollo[] = [];
+function createApollo(options: ConstructorParameters<typeof Apollo>[0] = {}): Apollo {
+  const instance = new Apollo(options);
+  instances.push(instance);
+  return instance;
+}
+afterEach(() => {
+  for (const instance of instances.splice(0)) {
+    instance.destroy();
+  }
+  vi.restoreAllMocks();
+});
+
 let aion: ReturnType<typeof createFakeAion>;
 let element: HTMLElement;
 
@@ -31,7 +44,7 @@ beforeEach(() => {
 
 describe('TargetsDetection', () => {
   it('emits enter and leave for the mouse using the descriptor offset', () => {
-    const apollo = new Apollo({ aion });
+    const apollo = createApollo({ aion });
     const callback = vi.fn();
     const detection = new TargetsDetection({
       emitGlobal: false,
@@ -58,7 +71,7 @@ describe('TargetsDetection', () => {
   });
 
   it('recomputes boundings once per frame after a scroll, not per event', () => {
-    const apollo = new Apollo({ aion });
+    const apollo = createApollo({ aion });
     const detection = new TargetsDetection({
       targets: [{ id: 't', elements: [element] }],
     });
@@ -80,7 +93,7 @@ describe('TargetsDetection', () => {
   });
 
   it('hit-tests visibility only for targets under the pointer', () => {
-    const apollo = new Apollo({ aion });
+    const apollo = createApollo({ aion });
     const other = document.createElement('div');
     document.body.append(other);
     other.getBoundingClientRect = () => rect(500, 500, 50, 50);
@@ -112,7 +125,7 @@ describe('TargetsDetection', () => {
   });
 
   it('drops removed elements and clears the active target', () => {
-    const apollo = new Apollo({ aion });
+    const apollo = createApollo({ aion });
     const detection = new TargetsDetection({
       emitGlobal: false,
       targets: [{ id: 't', elements: [element] }],
@@ -128,5 +141,39 @@ describe('TargetsDetection', () => {
     expect(detection.activeMouseTarget).toBeNull();
     aion.frame(16);
     expect(detection.activeMouseTarget).toBeNull();
+  });
+});
+
+describe('TargetsDetection visibility transitions', () => {
+  it('leaves an occluded target and shares hit tests within each frame', () => {
+    const apollo = createApollo({ aion, initialPosition: { x: 120, y: 120 } });
+    const callback = vi.fn();
+    const hitTest = vi.fn(() => element as Element);
+    document.elementFromPoint = hitTest;
+    const detection = new TargetsDetection({
+      emitGlobal: false,
+      targets: [
+        {
+          id: 't',
+          elements: [element],
+          callback,
+          checkVisibility: TargetsDetection.VISIBILITY_CHECK.FULL,
+        },
+      ],
+    });
+    apollo.registerPlugin(detection);
+    aion.frame(16);
+    expect(hitTest).toHaveBeenCalledTimes(4);
+    expect(detection.activeMouseTarget).not.toBeNull();
+    hitTest.mockReturnValue(document.body);
+    aion.frame(16);
+    expect(detection.activeMouseTarget).toBeNull();
+    expect(detection.activeCursorTarget).toBeNull();
+    expect(callback.mock.calls.map((call) => call[1])).toEqual([
+      'apollo-mouse-enter',
+      'apollo-cursor-enter',
+      'apollo-mouse-leave',
+      'apollo-cursor-leave',
+    ]);
   });
 });
