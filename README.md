@@ -96,3 +96,23 @@ Apollo listens for pointer events on `window` and needs `requestAnimationFrame`.
 ## TypeScript Support
 
 Apollo is written in TypeScript and exports all necessary types and interfaces (e.g., `ApolloOptions`, `ApolloPlugin`, `Vec2`).
+
+## Maintenance and compatibility
+
+See [MAINTAINERS.md](MAINTAINERS.md), [CONTRIBUTING.md](CONTRIBUTING.md) and
+[CHANGELOG.md](CHANGELOG.md). Historical contributor credits are retained.
+The CI runtime is Node 24; DOM instances are client-only. Imports are SSR-safe.
+The runtime expects native ES2023 support; TypeScript does not provide browser
+polyfills. DOM functionality uses requestAnimationFrame, Pointer/Touch Events
+and observers where applicable. Test the target browser matrix before release.
+
+Nested constructor settings may be partial. An easing duration of zero means
+immediate movement; negative or non-finite easing durations are rejected.
+`respectReducedMotion: true` opts in to immediate movement while the system
+requests reduced motion. The default remains the existing easing behavior,
+and plugin frame hooks continue running even while the instance is still.
+
+When target positions change through transforms or virtual scrolling, call
+`TargetsDetection.recalculate()` after updating the transform, before its next
+frame check. Scroll/resize invalidation is automatic; arbitrary transforms are
+not DOM resize events.
