@@ -15,6 +15,8 @@ export interface Vec2 {
 }
 
 export interface ApolloOptions {
+  // Opt in to immediate movement when the user requests reduced motion.
+  respectReducedMotion?: boolean;
   easing: Easing;
   initialPosition: Vec2;
   detectTouch: boolean;
@@ -47,3 +49,9 @@ export interface ApolloPlugin {
   // Called at the very end of apollo frame code
   afterFrame?: (context: Apollo, delta: number) => void;
 }
+
+// Constructor input accepts partial nested settings; resolved options stay complete.
+export type ApolloInputOptions = Omit<Partial<ApolloOptions>, 'easing' | 'initialPosition'> & {
+  easing?: Partial<ApolloOptions['easing']>;
+  initialPosition?: Partial<ApolloOptions['initialPosition']>;
+};

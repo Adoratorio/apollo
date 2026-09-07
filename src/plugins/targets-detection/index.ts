@@ -20,6 +20,7 @@ class TargetsDetection implements ApolloPlugin {
   #resizeObserver: ResizeObserver | null = null;
   // Boundings are recomputed at most once per frame, on the first frame after a
   // scroll/resize, instead of synchronously on every event
+  #visibility = new Map<SingleTarget, boolean>();
   #dirty = true;
   #markDirty = (): void => {
     this.#dirty = true;
@@ -50,13 +51,16 @@ class TargetsDetection implements ApolloPlugin {
       window.addEventListener('resize', this.#markDirty, { passive: true });
       if (typeof ResizeObserver !== 'undefined' && typeof document !== 'undefined') {
         this.#resizeObserver = new ResizeObserver(this.#markDirty);
-        this.#resizeObserver.observe(document.body);
+        if (document.body) {
+          this.#resizeObserver.observe(document.body);
+        }
       }
     }
     this.#dirty = true;
   }
 
   public preFrame(): void {
+    this.#visibility.clear();
     if (this.#dirty) {
       this.#recalculateBoundings();
     }
@@ -92,24 +96,27 @@ class TargetsDetection implements ApolloPlugin {
     enter: EVENTS,
     leave: EVENTS,
   ): SingleTarget | null {
-    let current = active;
-    if (current !== null && !isInRect(point, current.boundings)) {
-      this.#emit(current, leave);
-      current = null;
-    }
-
-    const hit = this.#targets.find(
-      (target) => isInRect(point, target.boundings) && isVisible(target),
-    );
-    if (hit && (current === null || current.id !== hit.id)) {
-      if (current !== null) {
-        this.#emit(current, leave);
+    const hit =
+      this.#targets.find((target) => {
+        if (!isInRect(point, target.boundings)) {
+          return false;
+        }
+        let visible = this.#visibility.get(target);
+        if (visible === undefined) {
+          visible = isVisible(target);
+          this.#visibility.set(target, visible);
+        }
+        return visible;
+      }) ?? null;
+    if (hit !== active) {
+      if (active !== null) {
+        this.#emit(active, leave);
       }
-      current = hit;
-      this.#emit(current, enter);
+      if (hit !== null) {
+        this.#emit(hit, enter);
+      }
     }
-
-    return current;
+    return hit;
   }
 
   #checkTargets(): void {
@@ -181,6 +188,7 @@ class TargetsDetection implements ApolloPlugin {
       this.#resizeObserver.disconnect();
       this.#resizeObserver = null;
     }
+    this.#visibility.clear();
     this.#targets = [];
     this.#elementsMap = new WeakMap();
     this.activeMouseTarget = null;

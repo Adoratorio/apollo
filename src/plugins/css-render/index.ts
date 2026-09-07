@@ -7,6 +7,7 @@ class CSSRender implements ApolloPlugin {
   #size: Size = { width: 0, height: 0 };
   #resizeObserver: ResizeObserver | null = null;
   #lastTransform = '';
+  #originalTransform = '';
 
   public name = 'CSSRender';
 
@@ -23,6 +24,7 @@ class CSSRender implements ApolloPlugin {
 
     const { cursor } = this.#options;
     if (cursor) {
+      this.#originalTransform = cursor.style.transform;
       this.#measure(cursor);
       if (typeof ResizeObserver !== 'undefined') {
         this.#resizeObserver = new ResizeObserver(() => this.#measure(cursor));
@@ -57,6 +59,10 @@ class CSSRender implements ApolloPlugin {
   }
 
   public destroy(): void {
+    const { cursor } = this.#options;
+    if (cursor && cursor.style.transform === this.#lastTransform) {
+      cursor.style.transform = this.#originalTransform;
+    }
     if (this.#resizeObserver) {
       this.#resizeObserver.disconnect();
       this.#resizeObserver = null;

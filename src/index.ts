@@ -2,6 +2,7 @@ import AionEngine from '@adoratorio/aion';
 import {
   type Aion,
   type ApolloOptions,
+  type ApolloInputOptions,
   type ApolloPlugin,
   type Timeline,
   type Vec2,
@@ -13,6 +14,7 @@ class Apollo {
   static #counter = 0;
 
   #options: ApolloOptions;
+  #motionQuery: MediaQueryList | null = null;
   #mousePosition: Vec2;
   #mouseRenderPosition: Vec2;
   #trackMouse = true;
@@ -27,7 +29,7 @@ class Apollo {
   #plugins: ApolloPlugin[] = [];
   #internalId = 0;
 
-  constructor(options: Partial<ApolloOptions> = {}) {
+  constructor(options: ApolloInputOptions = {}) {
     if (typeof window === 'undefined') {
       throw new Error('[Apollo] You are not using this package in a browser environment');
     }
@@ -49,6 +51,14 @@ class Apollo {
       easing: { ...defaults.easing, ...options.easing },
       initialPosition: { ...defaults.initialPosition, ...options.initialPosition },
     };
+
+    if (!Number.isFinite(this.#options.easing.duration) || this.#options.easing.duration < 0) {
+      throw new RangeError('[Apollo] Easing duration must be finite and non-negative');
+    }
+
+    if (this.#options.respectReducedMotion && typeof window.matchMedia === 'function') {
+      this.#motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    }
 
     // Set the initial mouse position
     const { x, y } = this.#options.initialPosition;
@@ -97,9 +107,9 @@ class Apollo {
     this.#cursorYTimeline.final = this.#mouseRenderPosition.y;
 
     // Calculate current timeline value
-    const { duration } = this.#options.easing;
+    const duration = this.#motionQuery?.matches ? 0 : this.#options.easing.duration;
     const deltaT = Math.min(Math.max(delta, 0), duration);
-    const time = this.#options.easing.mode(deltaT / duration);
+    const time = this.#options.easing.mode(duration === 0 ? 1 : deltaT / duration);
 
     this.#cursorXTimeline.current =
       this.#cursorXTimeline.initial +
@@ -279,6 +289,14 @@ class Apollo {
   }
 }
 
-export type { Aion, ApolloOptions, ApolloPlugin, Easing, Timeline, Vec2 } from './types.ts';
+export type {
+  ApolloInputOptions,
+  Aion,
+  ApolloOptions,
+  ApolloPlugin,
+  Easing,
+  Timeline,
+  Vec2,
+} from './types.ts';
 export { EASINGS as EASING, type EasingFunction } from './easing.ts';
 export default Apollo;
