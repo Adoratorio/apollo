@@ -3,3 +3,8 @@ export interface CSSRenderOptions {
   precision: number;
   render: boolean;
 }
+
+export interface Size {
+  width: number;
+  height: number;
+}

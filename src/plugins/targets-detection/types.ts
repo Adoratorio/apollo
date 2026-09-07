@@ -1,3 +1,4 @@
+import { type Vec2 } from '../../types.ts';
 import type SingleTarget from './SingleTarget.ts';
 
 export const VISIBILITY_CHECK = {
@@ -19,22 +20,28 @@ export type EVENTS = (typeof EVENTS)[keyof typeof EVENTS];
 
 export type TargetCallback = (target: SingleTarget, event: EVENTS) => void;
 
+export type ApolloHTMLElement = HTMLElement;
+
+export interface Rect {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+  width: number;
+  height: number;
+}
+
 export interface TargetDescriptor {
   id: string;
   elements: ApolloHTMLElement[];
-  offset: Vec2;
-  callback: TargetCallback;
-  checkVisibility: VISIBILITY_CHECK;
-}
-
-export type ApolloHTMLElement = HTMLElement;
-
-export interface Vec2 {
-  x: number;
-  y: number;
+  offset?: Partial<Vec2>;
+  callback?: TargetCallback;
+  checkVisibility?: VISIBILITY_CHECK;
 }
 
 export interface TargetsDetectionOptions {
   targets: TargetDescriptor[];
   emitGlobal: boolean;
 }
+
+export type { Vec2 } from '../../types.ts';

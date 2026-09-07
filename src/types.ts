@@ -22,8 +22,9 @@ export interface ApolloOptions {
   debug: boolean;
 }
 
+// Per-axis smoothing state: each frame moves `current` from `initial` towards
+// `final` by the easing curve evaluated at `delta / duration`
 export interface Timeline {
-  start: number;
   duration: number;
   initial: number;
   current: number;

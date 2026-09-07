@@ -44,10 +44,10 @@ CSSRenderInstance.stopRender();
 
 #### cursorElement
 
-• Type: `Element | null`
+• Type: `HTMLElement | null`
 Get back the DOM node associated with the style rendering
 
 #### boundings
 
-• Type: `Partial<DOMRect>`
-Get the actual boundings of the cursor element. Used internally to calculate offset in order to center the cursor to the mouse.
+• Type: `Size` (`{ width, height }`)
+The layout size of the cursor element (transforms excluded), kept up to date with a `ResizeObserver`. Used internally to center the cursor on the mouse.

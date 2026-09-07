@@ -47,7 +47,7 @@ Apollo accepts an `options` object with the following properties:
 | :-------- | :--: | :-----: | :---------- |
 | `easing` | `Easing` | `{ mode: Apollo.EASING.CUBIC, duration: 1000 }` | An easing object used to describe the cursor element animation. |
 | `initialPosition` | `Vec2` | `{ x: 0, y: 0 }` | Starting position of the cursor element. |
-| `detectTouch` | `boolean` | `false` | If touch events count as valid interaction to evaluate a new cursor position. |
+| `detectTouch` | `boolean` | `false` | If touch events count as valid interaction to evaluate a new cursor position. When `false` touch pointers are ignored entirely. |
 | `aion` | `Aion \| null` | `null` | An `Aion` instance to be used as engine; if left `null` one will be created automatically. |
 | `debug` | `boolean` | `false` | Enable namespaced `console.warn` diagnostics for recoverable issues (contract violations always throw). Forwarded to the internally created `Aion`. |
 
@@ -58,6 +58,9 @@ Apollo accepts an `options` object with the following properties:
 ```typescript
 // Register a single plugin (returns the assigned ID)
 apollo.registerPlugin(plugin: ApolloPlugin, id?: string): string
+
+// Register several plugins at once (returns the assigned IDs)
+apollo.registerPlugins(plugins: ApolloPlugin[], ids?: string[]): string[]
 
 // Unregister a plugin by ID
 apollo.unregisterPlugin(id: string): boolean
@@ -83,8 +86,12 @@ apollo.destroy();
 *   **`normalizedCoords` (`Vec2`)**: Smoothed position in normalized values (`-1` to `1`).
 *   **`mouse` (`Vec2`)**: Native mouse pointer position in screen pixels.
 *   **`velocity` (`Vec2`)**: Absolute per-axis speed of the cursor since the previous frame.
-*   **`direction` (`Vec2`)**: Movement direction (`-1` or `1` per axis).
+*   **`direction` (`Vec2`)**: Movement direction (`-1`, `0` or `1` per axis; `0` while the cursor is still).
 *   **`trackMouse` (`boolean`)**: Get or set the current mouse tracking state.
+
+## Browser Support & SSR
+
+Apollo listens for pointer events on `window` and needs `requestAnimationFrame`. Instantiating it outside of a browser environment throws an error.
 
 ## TypeScript Support
 

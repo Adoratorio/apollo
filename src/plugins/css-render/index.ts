@@ -1,12 +1,12 @@
 import { type ApolloPlugin } from '../../types.ts';
 import type Apollo from '../../index.ts';
-import { type CSSRenderOptions } from './types.ts';
+import { type CSSRenderOptions, type Size } from './types.ts';
 
 class CSSRender implements ApolloPlugin {
-  #context: Apollo | null = null;
   #options: CSSRenderOptions;
-  #cursorBounding: DOMRect;
+  #size: Size = { width: 0, height: 0 };
   #resizeObserver: ResizeObserver | null = null;
+  #lastTransform = '';
 
   public name = 'CSSRender';
 
@@ -14,45 +14,46 @@ class CSSRender implements ApolloPlugin {
     const defaults: CSSRenderOptions = {
       cursor:
         typeof document !== 'undefined'
-          ? (document.querySelector('.apollo__cursor') as HTMLElement)
+          ? document.querySelector<HTMLElement>('.apollo__cursor')
           : null,
       precision: 4,
       render: true,
     };
     this.#options = { ...defaults, ...options };
 
-    if (this.#options.cursor) {
-      this.#cursorBounding = this.#options.cursor.getBoundingClientRect();
+    const { cursor } = this.#options;
+    if (cursor) {
+      this.#measure(cursor);
       if (typeof ResizeObserver !== 'undefined') {
-        this.#resizeObserver = new ResizeObserver(() => {
-          if (this.#options.cursor) {
-            this.#cursorBounding = this.#options.cursor.getBoundingClientRect();
-          }
-        });
-        this.#resizeObserver.observe(this.#options.cursor);
+        this.#resizeObserver = new ResizeObserver(() => this.#measure(cursor));
+        this.#resizeObserver.observe(cursor);
       }
-    } else {
-      this.#cursorBounding = new DOMRect();
     }
   }
 
-  public register(context: Apollo): void {
-    this.#context = context;
+  // Layout size, unaffected by the transforms applied to the cursor itself
+  // (a CSS scale on hover must not shift the centering)
+  #measure(cursor: HTMLElement): void {
+    this.#size = { width: cursor.offsetWidth, height: cursor.offsetHeight };
   }
 
-  public frame(): void {
-    if (!this.#context || !this.#options.render || !this.cursorElement) {
+  public frame(context: Apollo): void {
+    const { cursor, render, precision } = this.#options;
+    if (!render || !cursor) {
       return;
     }
 
-    const factor = 10 ** this.#options.precision;
-    const position = {
-      x: Math.round((this.#context.coords.x - this.#cursorBounding.width / 2) * factor) / factor,
-      y: Math.round((this.#context.coords.y - this.#cursorBounding.height / 2) * factor) / factor,
-    };
+    const factor = 10 ** precision;
+    const x = Math.round((context.coords.x - this.#size.width / 2) * factor) / factor;
+    const y = Math.round((context.coords.y - this.#size.height / 2) * factor) / factor;
 
-    const transform = `translateX(${position.x}px) translateY(${position.y}px) translateZ(0px)`;
-    (this.cursorElement as HTMLElement).style.transform = transform;
+    // Skip the style write when the cursor has not moved
+    const transform = `translate3d(${x}px, ${y}px, 0)`;
+    if (transform === this.#lastTransform) {
+      return;
+    }
+    this.#lastTransform = transform;
+    cursor.style.transform = transform;
   }
 
   public destroy(): void {
@@ -70,12 +71,12 @@ class CSSRender implements ApolloPlugin {
     this.#options.render = false;
   }
 
-  public get cursorElement(): Element | null {
+  public get cursorElement(): HTMLElement | null {
     return this.#options.cursor;
   }
 
-  public get boundings(): Partial<DOMRect> {
-    return this.#cursorBounding;
+  public get boundings(): Size {
+    return this.#size;
   }
 }
 

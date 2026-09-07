@@ -15,9 +15,9 @@ class Apollo {
   #options: ApolloOptions;
   #mousePosition: Vec2;
   #mouseRenderPosition: Vec2;
-  #trackMouse: boolean;
+  #trackMouse = true;
   #cursorPosition: Vec2;
-  #cursorPositionPrev: Vec2 = { x: 0, y: 0 };
+  #cursorPositionPrev: Vec2;
   #velocity: Vec2 = { x: 0, y: 0 };
   #direction: Vec2 = { x: 0, y: 0 };
   #engine: Aion;
@@ -28,6 +28,10 @@ class Apollo {
   #internalId = 0;
 
   constructor(options: Partial<ApolloOptions> = {}) {
+    if (typeof window === 'undefined') {
+      throw new Error('[Apollo] You are not using this package in a browser environment');
+    }
+
     const defaults: ApolloOptions = {
       easing: {
         mode: Apollo.EASING.CUBIC,
@@ -38,25 +42,31 @@ class Apollo {
       aion: null,
       debug: false,
     };
-    this.#options = { ...defaults, ...options };
+    // Nested objects are merged too, so a partial `easing` keeps the other defaults
+    this.#options = {
+      ...defaults,
+      ...options,
+      easing: { ...defaults.easing, ...options.easing },
+      initialPosition: { ...defaults.initialPosition, ...options.initialPosition },
+    };
 
     // Set the initial mouse position
-    this.#mousePosition = this.#options.initialPosition;
-    this.#mouseRenderPosition = this.#mousePosition;
-    this.#cursorPosition = this.#mousePosition;
+    const { x, y } = this.#options.initialPosition;
+    this.#mousePosition = { x, y };
+    this.#mouseRenderPosition = { x, y };
+    this.#cursorPosition = { x, y };
+    this.#cursorPositionPrev = { x, y };
     this.#cursorXTimeline = {
-      start: 0,
       duration: this.#options.easing.duration,
-      initial: this.#cursorPosition.x,
-      current: this.#cursorPosition.x,
-      final: this.#cursorPosition.x,
+      initial: x,
+      current: x,
+      final: x,
     };
     this.#cursorYTimeline = {
-      start: 0,
       duration: this.#options.easing.duration,
-      initial: this.#cursorPosition.y,
-      current: this.#cursorPosition.y,
-      final: this.#cursorPosition.y,
+      initial: y,
+      current: y,
+      final: y,
     };
 
     // Create or set the engine
@@ -67,11 +77,9 @@ class Apollo {
       this.#engine.start();
     }
 
-    // `#frame` is an already-bound arrow field — register it directly (no wrapper)
+    // `#frame` is an already-bound arrow field: register it directly (no wrapper)
     this.#engine.add(this.#frame, this.#aionId);
     this.#bindEvents();
-
-    this.#trackMouse = true;
   }
 
   #debugWarn(message: string): void {
@@ -89,8 +97,9 @@ class Apollo {
     this.#cursorYTimeline.final = this.#mouseRenderPosition.y;
 
     // Calculate current timeline value
-    const deltaT: number = Math.min(Math.max(delta, 0), this.#options.easing.duration);
-    const time: number = this.#options.easing.mode(deltaT / this.#options.easing.duration);
+    const { duration } = this.#options.easing;
+    const deltaT = Math.min(Math.max(delta, 0), duration);
+    const time = this.#options.easing.mode(deltaT / duration);
 
     this.#cursorXTimeline.current =
       this.#cursorXTimeline.initial +
@@ -106,19 +115,12 @@ class Apollo {
 
     // Calculate velocity and direction (guard delta = 0 to avoid NaN/Infinity)
     const dt = delta || 1;
-    this.#velocity = {
-      x: (this.#cursorPosition.x - this.#cursorPositionPrev.x) / dt,
-      y: (this.#cursorPosition.y - this.#cursorPositionPrev.y) / dt,
-    };
+    const vx = (this.#cursorPosition.x - this.#cursorPositionPrev.x) / dt;
+    const vy = (this.#cursorPosition.y - this.#cursorPositionPrev.y) / dt;
 
-    this.#direction = {
-      x: this.#velocity.x > 0 ? 1 : -1,
-      y: this.#velocity.y > 0 ? 1 : -1,
-    };
-
-    // Normalize velocity to absolute values AFTER direction is derived from the signed value
-    this.#velocity.x = Math.abs(this.#velocity.x);
-    this.#velocity.y = Math.abs(this.#velocity.y);
+    // Direction is derived from the signed velocity: 0 when the cursor is still
+    this.#direction = { x: Math.sign(vx), y: Math.sign(vy) };
+    this.#velocity = { x: Math.abs(vx), y: Math.abs(vy) };
 
     // Call PLUGIN frame callback before resetting the timeline and values
     this.#plugins.forEach((plugin) => plugin.frame?.(this, delta));
@@ -133,36 +135,46 @@ class Apollo {
   };
 
   #bindEvents(): void {
-    document.body.addEventListener('pointermove', this.#mouseMove, { passive: true });
+    // Listen on `window` so the whole viewport is covered and the instance can
+    // be created before `document.body` exists
+    window.addEventListener('pointermove', this.#pointerMove, { passive: true });
 
     if (this.#options.detectTouch) {
-      document.body.addEventListener('touchstart', this.#touchMove, { passive: true });
-      document.body.addEventListener('touchmove', this.#touchMove, { passive: true });
+      // Touch keeps its own listeners: pointer events stop once the browser takes
+      // over the gesture (scroll/pan), touch events keep reporting positions
+      window.addEventListener('touchstart', this.#touchMove, { passive: true });
+      window.addEventListener('touchmove', this.#touchMove, { passive: true });
     }
   }
 
-  #mouseMove = (event: Event): void => {
-    const mouseEvent = event as MouseEvent;
-    this.#mousePosition = {
-      x: mouseEvent.clientX,
-      y: mouseEvent.clientY,
-    };
-    if (!this.#trackMouse) {
+  #unbindEvents(): void {
+    window.removeEventListener('pointermove', this.#pointerMove);
+    window.removeEventListener('touchstart', this.#touchMove);
+    window.removeEventListener('touchmove', this.#touchMove);
+  }
+
+  #updateMouse(x: number, y: number): void {
+    this.#mousePosition = { x, y };
+    if (this.#trackMouse) {
+      this.#mouseRenderPosition = this.#mousePosition;
+    }
+  }
+
+  #pointerMove = (event: Event): void => {
+    const pointerEvent = event as PointerEvent;
+    // Touch pointers are handled by the touch listeners (or ignored)
+    if (pointerEvent.pointerType === 'touch') {
       return;
     }
-    this.#mouseRenderPosition = this.#mousePosition;
+    this.#updateMouse(pointerEvent.clientX, pointerEvent.clientY);
   };
 
   #touchMove = (event: Event): void => {
-    const touchEvent = event as TouchEvent;
-    this.#mousePosition = {
-      x: touchEvent.touches[0]?.clientX || 0,
-      y: touchEvent.touches[0]?.clientY || 0,
-    };
-    if (!this.#trackMouse) {
+    const [touch] = (event as TouchEvent).touches;
+    if (!touch) {
       return;
     }
-    this.#mouseRenderPosition = this.#mousePosition;
+    this.#updateMouse(touch.clientX, touch.clientY);
   };
 
   #register(plugin: ApolloPlugin, id: string): void {
@@ -201,37 +213,19 @@ class Apollo {
     return true;
   }
 
-  public registerPlugins(plugins: ApolloPlugin[], ids: string[]): string[] {
-    const is: string[] = [];
-    plugins.forEach((plugin, index) => {
-      is.push(this.registerPlugin(plugin, ids[index]));
-    });
-
-    return is;
-  }
-
-  #unbindEvents(): void {
-    document.body.removeEventListener('pointermove', this.#mouseMove);
-
-    if (this.#options.detectTouch) {
-      document.body.removeEventListener('touchstart', this.#touchMove);
-      document.body.removeEventListener('touchmove', this.#touchMove);
-    }
+  public registerPlugins(plugins: ApolloPlugin[], ids: string[] = []): string[] {
+    return plugins.map((plugin, index) => this.registerPlugin(plugin, ids[index]));
   }
 
   public destroy(): void {
     this.#unbindEvents();
     this.#engine.remove(this.#aionId);
-    this.#plugins.forEach((plugin) => {
-      if (plugin.destroy) {
-        plugin.destroy();
-      }
-    });
+    this.#plugins.forEach((plugin) => plugin.destroy?.());
     this.#plugins = [];
   }
 
-  public getPlugin(name: string): ApolloPlugin | undefined {
-    return this.#plugins.find((plugin) => plugin.name === name);
+  public getPlugin<T extends ApolloPlugin = ApolloPlugin>(name: string): T | undefined {
+    return this.#plugins.find((plugin) => plugin.name === name) as T | undefined;
   }
 
   public get trackMouse(): boolean {
@@ -255,7 +249,7 @@ class Apollo {
   }
 
   public set coords(coords: Vec2) {
-    this.#mouseRenderPosition = coords;
+    this.#mouseRenderPosition = { x: coords.x, y: coords.y };
   }
 
   public get normalizedCoords(): Vec2 {

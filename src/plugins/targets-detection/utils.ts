@@ -1,20 +1,17 @@
-import { VISIBILITY_CHECK, type Vec2 } from './types.ts';
+import { VISIBILITY_CHECK, type Rect, type Vec2 } from './types.ts';
 import type SingleTarget from './SingleTarget.ts';
 
-export function isInRect(point: Vec2, rect: DOMRect, offset: Vec2 = { x: 0, y: 0 }): boolean {
+export function isInRect(point: Vec2, rect: Rect): boolean {
   return (
-    point.x >= rect.left - offset.x &&
-    point.x <= rect.right + offset.x &&
-    point.y >= rect.top - offset.y &&
-    point.y <= rect.bottom + offset.y
+    point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
   );
 }
 
+// Hit-tests the four corners of the target; expensive (forces layout), so it
+// is only called for targets the point is already inside of
 export function isVisible(target: SingleTarget): boolean {
-  if (
-    !target.descriptor.checkVisibility ||
-    target.descriptor.checkVisibility === VISIBILITY_CHECK.NONE
-  ) {
+  const check = target.descriptor.checkVisibility ?? VISIBILITY_CHECK.NONE;
+  if (check === VISIBILITY_CHECK.NONE) {
     return true;
   }
 
@@ -28,20 +25,13 @@ export function isVisible(target: SingleTarget): boolean {
 
   const elements = points.map(({ x, y }) => document.elementFromPoint(x, y));
 
-  if (target.descriptor.checkVisibility === VISIBILITY_CHECK.PARTIAL) {
+  if (check === VISIBILITY_CHECK.PARTIAL) {
     return elements.some((el) => target.element.contains(el));
   }
 
-  if (target.descriptor.checkVisibility === VISIBILITY_CHECK.FULL) {
-    return elements.every((el) => target.element.contains(el));
-  }
-
-  return false;
+  return elements.every((el) => target.element.contains(el));
 }
 
 export function emitEvent(id: string, payload: unknown): void {
-  const init: CustomEventInit = {};
-  init.detail = payload;
-  const customEvent = new CustomEvent(id, init);
-  window.dispatchEvent(customEvent);
+  window.dispatchEvent(new CustomEvent(id, { detail: payload }));
 }

@@ -13,13 +13,13 @@
 
 `TargetDescriptor` are composed as follow
 
-| parameter       |                                                              type                                                               |                 default                  | description                                                                                           |
-| :-------------- | :-----------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------: | :---------------------------------------------------------------------------------------------------- |
-| id              |                                                            `string`                                                             |                    ``                    | The unique identifier of the target                                                                   |
-| elements        |                                                      `Array<HTMLElements>`                                                      |                   `[]`                   | The list of DOM nodes to watch                                                                        |
-| offset          |                                                             `Vec2`                                                              |             `{ x: 0, y: 0 }`             | The virtual offset around the element in both direction included when triggering events               |
-| callback        |                                                           `Function`                                                            |         `(target, type) => { }`          | The function called on each event, will have the target and the event type as params                  |
-| checkVisibility | `TargetsDetection.VISIBILITY_CHECK.NONE \| TargetsDetection.VISIBILITY_CHECK.FULL \| TargetsDetection.VISIBILITY_CHECK.PARTIAL` | `TargetsDetection.VISIBILITY_CHECK.NONE` | If to check the full or partial visibility of the element before firing events or not checking at all |
+| parameter       |                                                                    type                                                                    |                 default                  | description                                                                                                                                                                |
+| :-------------- | :----------------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id              |                                                                  `string`                                                                  |                    ``                    | The unique identifier of the target                                                                                                                                        |
+| elements        |                                                           `Array<HTMLElements>`                                                            |                   `[]`                   | The list of DOM nodes to watch                                                                                                                                             |
+| offset          |                                                         `Partial<Vec2>` (optional)                                                         |             `{ x: 0, y: 0 }`             | The virtual offset around the element in both direction included when triggering events                                                                                    |
+| callback        |                                                        `TargetCallback` (optional)                                                         |               `undefined`                | The function called on each event, will have the target and the event type as params                                                                                       |
+| checkVisibility | `TargetsDetection.VISIBILITY_CHECK.NONE \| TargetsDetection.VISIBILITY_CHECK.FULL \| TargetsDetection.VISIBILITY_CHECK.PARTIAL` (optional) | `TargetsDetection.VISIBILITY_CHECK.NONE` | If to check the full or partial visibility of the element before firing events or not checking at all. Visibility is hit-tested only for targets the pointer is inside of. |
 
 ```typescript
 import { TargetsDetection } from '@adoratorio/apollo/plugins';
@@ -89,6 +89,14 @@ targetsDetectionInstance.removeTarget(id : string) : undefined
 | parameter | required | description                        |
 | :-------- | :------: | :--------------------------------- |
 | id        | `string` | The id of the target to be removed |
+
+### recalculate()
+
+Boundings are cached and refreshed once per frame after a scroll or resize. Call this when targets move without emitting those events (e.g. transform-based or virtual scrolling).
+
+```typescript
+targetsDetectionInstance.recalculate() : undefined
+```
 
 ### pullFromTarget()
 
