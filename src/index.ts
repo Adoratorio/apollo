@@ -209,6 +209,10 @@ class Apollo {
     return pluginId;
   }
 
+  public registerPlugins(plugins: ApolloPlugin[], ids: string[] = []): string[] {
+    return plugins.map((plugin, index) => this.registerPlugin(plugin, ids[index]));
+  }
+
   public unregisterPlugin(id: string): boolean {
     const foundIndex = this.#plugins.findIndex((p) => p.id === id);
     if (foundIndex === -1) {
@@ -221,10 +225,6 @@ class Apollo {
     }
     this.#plugins.splice(foundIndex, 1);
     return true;
-  }
-
-  public registerPlugins(plugins: ApolloPlugin[], ids: string[] = []): string[] {
-    return plugins.map((plugin, index) => this.registerPlugin(plugin, ids[index]));
   }
 
   public destroy(): void {
