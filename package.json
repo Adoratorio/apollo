@@ -25,7 +25,8 @@
     "dist/**/*",
     "src/**/*",
     "MAINTAINERS.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "CONTRIBUTING.md"
   ],
   "scripts": {
     "build": "rm -rf ./dist && tsc",
@@ -37,7 +38,8 @@
     "test": "vitest run",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run format:check",
     "prepublishOnly": "pnpm run check && pnpm run test && pnpm run build",
-    "test:package": "node scripts/check-package.mjs"
+    "test:package": "node scripts/check-package.mjs",
+    "test:browser": "node scripts/browser-check.mjs"
   },
   "repository": {
     "type": "git",
@@ -56,7 +58,8 @@
   "contributors": [
     "Andrea Gottardi <andrea@adoratorio.com>",
     "Daniele Borra <daniele@adoratorio.com>",
-    "Tommaso Algozzino <tommaso@adoratorio.com>"
+    "Tommaso Algozzino <tommaso@adoratorio.com>",
+    "Luca Bortolussi"
   ],
   "license": "MIT",
   "bugs": {

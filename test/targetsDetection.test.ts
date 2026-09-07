@@ -177,3 +177,15 @@ describe('TargetsDetection visibility transitions', () => {
     ]);
   });
 });
+
+it('allows destroying the cursor from an enter callback without resurrecting the target', () => {
+  const apollo = createApollo({ aion, initialPosition: { x: 120, y: 120 } });
+  const detection = new TargetsDetection({
+    emitGlobal: false,
+    targets: [{ id: 'destroy', elements: [element], callback: () => apollo.destroy() }],
+  });
+  apollo.registerPlugin(detection);
+  expect(() => aion.frame(16)).not.toThrow();
+  expect(detection.activeMouseTarget).toBeNull();
+  expect(detection.activeCursorTarget).toBeNull();
+});

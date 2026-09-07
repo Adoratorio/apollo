@@ -112,11 +112,11 @@ class TargetsDetection implements ApolloPlugin {
       if (active !== null) {
         this.#emit(active, leave);
       }
-      if (hit !== null) {
+      if (hit !== null && this.#elementsMap.get(hit.element) === hit) {
         this.#emit(hit, enter);
       }
     }
-    return hit;
+    return hit !== null && this.#elementsMap.get(hit.element) === hit ? hit : null;
   }
 
   #checkTargets(): void {
@@ -124,18 +124,25 @@ class TargetsDetection implements ApolloPlugin {
       return;
     }
 
-    this.activeMouseTarget = this.#track(
+    const mouseTarget = this.#track(
       this.activeMouseTarget,
       this.#context.mouse,
       EVENTS.MOUSE_ENTER,
       EVENTS.MOUSE_LEAVE,
     );
-    this.activeCursorTarget = this.#track(
+    if (!this.#context) {
+      return;
+    }
+    this.activeMouseTarget = mouseTarget;
+    const cursorTarget = this.#track(
       this.activeCursorTarget,
       this.#context.coords,
       EVENTS.CURSOR_ENTER,
       EVENTS.CURSOR_LEAVE,
     );
+    if (this.#context) {
+      this.activeCursorTarget = cursorTarget;
+    }
   }
 
   public addTarget(target: TargetDescriptor): void {
