@@ -1,0 +1,3 @@
+minimumReleaseAgeExclude:
+  - '@adoratorio/aion@1.0.0'
+  - '@adoratorio/aion@1.0.1'
