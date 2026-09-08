@@ -1,6 +1,6 @@
 # Apollo
 
-An engine to create custom cursor animations, magnetism, and hover effects.
+Custom cursors, motion and target detection for browser interfaces.
 
 ## Installation
 
@@ -97,14 +97,11 @@ Apollo listens for pointer events on `window` and needs `requestAnimationFrame`.
 
 Apollo is written in TypeScript and exports all necessary types and interfaces (e.g., `ApolloOptions`, `ApolloPlugin`, `Vec2`).
 
-## Maintenance and compatibility
+## Compatibility
 
-See [MAINTAINERS.md](MAINTAINERS.md), [CONTRIBUTING.md](CONTRIBUTING.md) and
-[CHANGELOG.md](CHANGELOG.md). Historical contributor credits are retained.
-The CI runtime is Node 24; DOM instances are client-only. Imports are SSR-safe.
-The runtime expects native ES2023 support; TypeScript does not provide browser
-polyfills. DOM functionality uses requestAnimationFrame, Pointer/Touch Events
-and observers where applicable. Test the target browser matrix before release.
+Imports are safe during server-side rendering. Create instances and DOM plugins on the client after mounting. The package targets ES2023 and does not include polyfills.
+
+## Motion and layout
 
 Nested constructor settings may be partial. An easing duration of zero means
 immediate movement; negative or non-finite easing durations are rejected.
@@ -116,3 +113,22 @@ When target positions change through transforms or virtual scrolling, call
 `TargetsDetection.recalculate()` after updating the transform, before its next
 frame check. Scroll/resize invalidation is automatic; arbitrary transforms are
 not DOM resize events.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, checks and pull requests.
+Version history is documented in the [changelog](CHANGELOG.md) and [GitHub releases](https://github.com/Adoratorio/apollo/releases).
+
+## Maintainers
+
+Maintained by [Adoratorio](https://github.com/Adoratorio).
+
+- [Andrea Gottardi](https://github.com/AndreaGottardi)
+- [Daniele Borra](https://github.com/borradaniele)
+- [Andrea Biason](https://github.com/biazo5)
+
+Contributor credits are preserved in [package.json](package.json) and the Git history.
+
+## License
+
+[MIT](LICENSE).
