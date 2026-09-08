@@ -26,7 +26,7 @@ From here, you can instantiate and register plugins to handle the rendering of t
 import { CSSRender } from '@adoratorio/apollo/plugins';
 
 apollo.registerPlugin(new CSSRender({
-  cursor: document.querySelector('.apollo__cursor')
+  cursor: document.querySelector<HTMLElement>('.apollo__cursor')
 }));
 ```
 
@@ -50,12 +50,15 @@ Apollo accepts an `options` object with the following properties:
 | `detectTouch` | `boolean` | `false` | If touch events count as valid interaction to evaluate a new cursor position. When `false` touch pointers are ignored entirely. |
 | `aion` | `Aion \| null` | `null` | An `Aion` instance to be used as engine; if left `null` one will be created automatically. |
 | `debug` | `boolean` | `false` | Enable namespaced `console.warn` diagnostics for recoverable issues (contract violations always throw). Forwarded to the internally created `Aion`. |
+| `respectReducedMotion` | `boolean` | Disabled when omitted | Use immediate movement while the system requests reduced motion. |
+
+All constructor options are optional; `easing` and `initialPosition` accept partial objects. Durations are in milliseconds. `Apollo.EASING` provides `LINEAR`, `QUAD`, `CUBIC`, `QUART` and `QUINT`; a custom `(t: number) => number` function is also accepted. When providing an `aion` instance, start that engine yourself. `destroy()` removes Apollo's frame handler without destroying the shared engine.
 
 ## Methods
 
 ### Plugin Management
 
-```typescript
+```text
 // Register a single plugin (returns the assigned ID)
 apollo.registerPlugin(plugin: ApolloPlugin, id?: string): string
 
@@ -85,9 +88,16 @@ apollo.destroy();
 *   **`coords` (`Vec2`)**: The current smoothed position in screen pixels. Settable.
 *   **`normalizedCoords` (`Vec2`)**: Smoothed position in normalized values (`-1` to `1`).
 *   **`mouse` (`Vec2`)**: Native mouse pointer position in screen pixels.
-*   **`velocity` (`Vec2`)**: Absolute per-axis speed of the cursor since the previous frame.
+*   **`normalizedMouse` (`Vec2`)**: Native pointer position normalized to the viewport, from `-1` to `1`.
+*   **`velocity` (`Vec2`)**: Absolute per-axis cursor speed in pixels per millisecond.
 *   **`direction` (`Vec2`)**: Movement direction (`-1`, `0` or `1` per axis; `0` while the cursor is still).
 *   **`trackMouse` (`boolean`)**: Get or set the current mouse tracking state.
+
+## Custom plugins
+
+Plugin names must be unique. `registerPlugin(plugin, id?)` assigns an ID and calls `register(context)` if provided; `registerPlugins(plugins, ids = [])` does this in array order. `getPlugin<T>(name)` looks up the plugin by its name, while `unregisterPlugin(id)` uses the assigned ID, calls `destroy()` and returns `false` when absent. An omitted or empty ID is generated automatically.
+
+An `ApolloPlugin` requires `name` and may expose `id`, `register(context)`, `preFrame(context, delta)`, `frame(context, delta)`, `afterFrame(context, delta)` and `destroy()`. On each frame, Apollo calls all `preFrame` hooks, updates its motion, calls all `frame` hooks, commits its frame state, then calls all `afterFrame` hooks. Hooks run in registration order within each phase; `delta` is in milliseconds.
 
 ## Browser Support & SSR
 
@@ -95,7 +105,7 @@ Apollo listens for pointer events on `window` and needs `requestAnimationFrame`.
 
 ## TypeScript Support
 
-Apollo is written in TypeScript and exports all necessary types and interfaces (e.g., `ApolloOptions`, `ApolloPlugin`, `Vec2`).
+Apollo exports `ApolloOptions`, `ApolloInputOptions`, `ApolloPlugin`, `Vec2`, `Easing`, `Timeline` and `Aion` types. Plugin classes and their configuration types are exported from `@adoratorio/apollo/plugins`.
 
 ## Compatibility
 
