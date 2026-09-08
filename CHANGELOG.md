@@ -6,6 +6,8 @@ This file records changes from 4.0.0 onward. See [GitHub releases](https://githu
 
 ### Documentation
 
+- Complete constructor options, pointer properties, plugin hooks, target callbacks and lifecycle guidance.
+
 - Refine contributor guidance and release notes; consolidate maintainer contacts in the README.
 
 ## [4.0.1](https://github.com/Adoratorio/apollo/releases/tag/v4.0.1) — 2026-09-08

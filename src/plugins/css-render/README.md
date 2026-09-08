@@ -17,7 +17,7 @@ import { CSSRender } from '@adoratorio/apollo/plugins';
 
 apollo.registerPlugin(
   new CSSRender({
-    cursor: document.querySelector('.cursor'),
+    cursor: document.querySelector<HTMLElement>('.cursor'),
   }),
 );
 ```
@@ -51,3 +51,9 @@ Get back the DOM node associated with the style rendering
 
 • Type: `Size` (`{ width, height }`)
 The layout size of the cursor element (transforms excluded), kept up to date with a `ResizeObserver`. Used internally to center the cursor on the mouse.
+
+## Lifecycle and layout
+
+All constructor options are optional. If `cursor` is null or the default selector finds no element, rendering is skipped. Position the cursor element at the viewport origin (usually `position: fixed; top: 0; left: 0; pointer-events: none`); CSSRender writes its centered translation, not positioning styles.
+
+`startRender()`, `stopRender()` and `destroy()` return `void`. `stopRender()` pauses writes while retaining the last transform. `destroy()` disconnects resize tracking and restores the original transform if it still owns the current value. Apollo invokes `frame(context)` automatically; unregister through `apollo.unregisterPlugin(id)` to remove the plugin and run cleanup.
